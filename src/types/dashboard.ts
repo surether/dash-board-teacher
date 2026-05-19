@@ -213,3 +213,47 @@ export interface LessonToolsState {
   rouletteState: RouletteToolState;
   qrCodeState: QrCodeToolState;
 }
+
+export type ExcelImportTarget =
+  | "studentRoster"
+  | "teacherTimetable"
+  | "classTimetable";
+
+export interface ExcelColumnMapping {
+  sourceColumn: string;
+  targetField: string;
+  required: boolean;
+  label: string;
+}
+
+export interface ExcelPreviewRow {
+  rowIndex: number;
+  values: Record<string, string>;
+}
+
+export type ExcelImportValidationLevel = "error" | "warning";
+
+export interface ExcelImportValidationIssue {
+  rowIndex?: number;
+  field?: string;
+  level: ExcelImportValidationLevel;
+  message: string;
+}
+
+export type ExcelImportDraftStatus =
+  | "idle"
+  | "selected"
+  | "mapped"
+  | "validated"
+  | "ready"
+  | "error";
+
+export interface ExcelImportDraft {
+  target: ExcelImportTarget;
+  fileName?: string;
+  columns: string[];
+  mappings: ExcelColumnMapping[];
+  previewRows: ExcelPreviewRow[];
+  issues: ExcelImportValidationIssue[];
+  status: ExcelImportDraftStatus;
+}

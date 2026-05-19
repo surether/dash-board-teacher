@@ -3,6 +3,7 @@ import { Check, Plus } from "lucide-react";
 import { STUDENT_ROSTER_UPDATED_EVENT } from "../storage/dashboardStorage";
 import { widgetStorage } from "../storage/widgetStorage";
 import type { ClassInfo, SchoolInfo, StudentRosterState } from "../types/dashboard";
+import { ExcelImportSettings } from "./ExcelImportSettings";
 
 function createId(prefix: string) {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -254,6 +255,8 @@ export function SchoolClassSettings() {
           </button>
         </div>
       </div>
+
+      <ExcelImportSettings />
     </div>
   );
 }

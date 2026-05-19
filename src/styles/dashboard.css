@@ -1,4 +1,3 @@
-
 * {
   box-sizing: border-box;
 }
@@ -368,6 +367,7 @@ button {
 .task-form input:focus,
 .school-settings input:focus,
 .school-settings select:focus,
+.excel-import-settings select:focus,
 .student-roster-widget input:focus,
 .student-roster-widget select:focus,
 .student-roster-widget textarea:focus,
@@ -784,7 +784,8 @@ button {
 }
 
 .settings-stack,
-.school-settings {
+.school-settings,
+.excel-import-settings {
   display: grid;
 }
 
@@ -792,7 +793,8 @@ button {
   gap: 18px;
 }
 
-.school-settings {
+.school-settings,
+.excel-import-settings {
   gap: 16px;
 }
 
@@ -870,6 +872,7 @@ button {
 .settings-form input,
 .settings-form select,
 .settings-select-row select,
+.excel-import-settings select,
 .roster-control select,
 .roster-date-control input,
 .student-roster-tools input,
@@ -889,6 +892,7 @@ button {
 .settings-form input,
 .settings-form select,
 .settings-select-row select,
+.excel-import-settings select,
 .roster-control select,
 .roster-date-control input,
 .student-roster-tools input,
@@ -907,6 +911,7 @@ button {
 
 .settings-form button,
 .settings-actions button,
+.excel-import-settings__controls button,
 .student-form button,
 .student-card__header button,
 .student-notes button {
@@ -930,16 +935,24 @@ button {
 
 .settings-form button:hover,
 .settings-actions button:hover,
+.excel-import-settings__controls button:hover,
 .student-form button:hover,
 .student-card__header button:hover,
 .student-notes button:hover {
   transform: translateY(-1px);
 }
 
-.settings-form button:disabled {
+.settings-form button:disabled,
+.excel-import-settings__controls button:disabled {
   cursor: not-allowed;
   opacity: 0.46;
   transform: none;
+}
+
+.excel-import-settings__controls .is-secondary {
+  color: var(--apple-text);
+  background: var(--apple-surface-strong);
+  box-shadow: var(--apple-shadow-control);
 }
 
 .settings-list {
@@ -964,6 +977,208 @@ button {
 .settings-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.excel-import-settings {
+  padding-top: 4px;
+}
+
+.excel-import-settings__header,
+.excel-import-settings__controls,
+.excel-import-settings__meta,
+.excel-validation-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.excel-import-settings__header {
+  justify-content: space-between;
+}
+
+.excel-import-settings h3,
+.excel-import-settings h4,
+.excel-import-settings p {
+  margin: 0;
+}
+
+.excel-import-settings h3 {
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+.excel-import-settings h4 {
+  font-size: 0.9rem;
+}
+
+.excel-import-settings p,
+.excel-import-settings__header span,
+.excel-import-settings__meta,
+.excel-import-settings__notice {
+  color: var(--apple-text-muted);
+  font-size: 0.8rem;
+}
+
+.excel-import-settings__header span,
+.excel-validation-summary span,
+.excel-mapping-list em {
+  width: fit-content;
+  padding: 6px 9px;
+  border-radius: var(--apple-radius-control);
+  background: var(--apple-surface-strong);
+  font-weight: 700;
+}
+
+.excel-import-settings__controls {
+  align-items: end;
+}
+
+.excel-import-settings__controls label {
+  display: grid;
+  min-width: min(240px, 100%);
+  flex: 1;
+  gap: 6px;
+  color: var(--apple-text-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.excel-import-settings__controls button {
+  min-width: 90px;
+}
+
+.excel-import-settings__notice {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--apple-surface-muted);
+}
+
+.excel-import-settings__meta {
+  justify-content: space-between;
+}
+
+.excel-import-settings__grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.85fr) minmax(0, 1.45fr) minmax(220px, 1fr);
+  gap: 14px;
+}
+
+.excel-import-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.excel-mapping-list,
+.excel-issue-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.excel-mapping-list li,
+.excel-issue-list li {
+  display: grid;
+  min-width: 0;
+  border: 1px solid var(--apple-border);
+  border-radius: 14px;
+  background: var(--apple-surface-muted);
+}
+
+.excel-mapping-list li {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  padding: 8px 9px;
+}
+
+.excel-mapping-list span,
+.excel-mapping-list strong {
+  overflow: hidden;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.excel-mapping-list small {
+  color: var(--apple-text-muted);
+}
+
+.excel-mapping-list em {
+  color: var(--apple-text-muted);
+  font-size: 0.68rem;
+  font-style: normal;
+}
+
+.excel-preview-table-wrap {
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid var(--apple-border);
+  border-radius: 14px;
+  background: var(--apple-surface-muted);
+}
+
+.excel-preview-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.excel-preview-table th,
+.excel-preview-table td {
+  padding: 8px 9px;
+  border-bottom: 1px solid var(--apple-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.excel-preview-table th {
+  color: var(--apple-text-muted);
+  font-weight: 740;
+}
+
+.excel-preview-table tbody tr:last-child th,
+.excel-preview-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.excel-validation-summary {
+  justify-content: flex-start;
+}
+
+.excel-validation-summary span {
+  font-size: 0.72rem;
+}
+
+.excel-validation-summary span[data-level="error"],
+.excel-issue-list li[data-level="error"] strong {
+  color: var(--apple-danger);
+}
+
+.excel-validation-summary span[data-level="warning"],
+.excel-issue-list li[data-level="warning"] strong {
+  color: var(--apple-accent-orange);
+}
+
+.excel-issue-list li {
+  gap: 3px;
+  padding: 9px 10px;
+}
+
+.excel-issue-list strong {
+  font-size: 0.76rem;
+}
+
+.excel-issue-list span,
+.excel-import-empty {
+  color: var(--apple-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.42;
 }
 
 .student-roster-widget {
@@ -2015,65 +2230,64 @@ button {
   line-height: 1.45;
 }
 
-
 @media (max-width: 780px) {
-.dashboard-app {
+  .dashboard-app {
     padding: 14px;
   }
 
-.widget-toolbar {
+  .widget-toolbar {
     position: static;
     align-items: stretch;
     flex-direction: column;
   }
 
-.widget-toolbar__actions {
+  .widget-toolbar__actions {
     justify-content: space-between;
   }
 
-.stub-grid {
+  .stub-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-.school-settings__grid,
-.student-notes,
-.student-history-grid,
-.ladder-tool-grid {
+  .school-settings__grid,
+  .excel-import-settings__grid,
+  .student-notes,
+  .student-history-grid,
+  .ladder-tool-grid {
     grid-template-columns: 1fr;
   }
 
-.student-card__header {
+  .student-card__header {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-.student-card__attendance,
-.student-card__meta {
+  .student-card__attendance,
+  .student-card__meta {
     grid-column: 1 / -1;
   }
 
-.student-card__actions {
+  .student-card__actions {
     grid-column: 2;
     grid-row: 1;
   }
 
-.settings-form--class {
+  .settings-form--class {
     grid-template-columns: minmax(0, 1fr) 86px 86px;
   }
 
-.settings-form--class button {
+  .settings-form--class button {
     grid-column: 1 / -1;
   }
-
 }
 
 @media (max-width: 640px) {
-.dashboard-grid {
+  .dashboard-grid {
     display: grid;
     height: auto !important;
     gap: 16px;
   }
 
-.dashboard-grid > .react-grid-item {
+  .dashboard-grid > .react-grid-item {
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -2082,84 +2296,93 @@ button {
     transform: none !important;
   }
 
-.dashboard-grid .widget-frame {
+  .dashboard-grid .widget-frame {
     min-height: 224px;
   }
 
-.dashboard-grid .react-resizable-handle {
+  .dashboard-grid .react-resizable-handle {
     display: none;
   }
-
 }
 
 @media (max-width: 520px) {
-.school-settings__header {
+  .school-settings__header {
     flex-direction: column;
   }
 
-.settings-form,
-.settings-form--class {
-    grid-template-columns: 1fr;
-  }
-
-.settings-actions {
-    justify-content: stretch;
-  }
-
-.settings-actions button {
-    width: 100%;
-  }
-
-.task-form {
-    grid-template-columns: minmax(0, 1fr) 38px;
-  }
-
-.task-form .priority-picker,
-.task-form input[type="date"] {
-    grid-column: 1 / -1;
-  }
-
-.alert-form {
-    grid-template-columns: minmax(0, 1fr) 38px;
-  }
-
-.alert-form input[type="date"] {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-.sticky-note-form {
-    grid-template-columns: minmax(0, 1fr) 38px;
-  }
-
-.sticky-note-form .sticky-color-picker {
-    grid-column: 1 / -1;
-  }
-
-.sticky-note-list {
-    grid-template-columns: 1fr;
-  }
-
-.roster-control,
-.roster-summary {
+  .excel-import-settings__header,
+  .excel-import-settings__controls,
+  .excel-import-settings__meta {
     align-items: stretch;
     flex-direction: column;
   }
 
-.roster-date-control {
+  .settings-form,
+  .settings-form--class {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-actions {
+    justify-content: stretch;
+  }
+
+  .settings-actions button {
+    width: 100%;
+  }
+
+  .excel-import-settings__controls button {
+    width: 100%;
+  }
+
+  .task-form {
+    grid-template-columns: minmax(0, 1fr) 38px;
+  }
+
+  .task-form .priority-picker,
+  .task-form input[type="date"] {
+    grid-column: 1 / -1;
+  }
+
+  .alert-form {
+    grid-template-columns: minmax(0, 1fr) 38px;
+  }
+
+  .alert-form input[type="date"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .sticky-note-form {
+    grid-template-columns: minmax(0, 1fr) 38px;
+  }
+
+  .sticky-note-form .sticky-color-picker {
+    grid-column: 1 / -1;
+  }
+
+  .sticky-note-list {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-control,
+  .roster-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .roster-date-control {
     flex-basis: auto;
   }
 
-.attendance-control {
+  .attendance-control {
     grid-template-columns: 1fr;
   }
 
-.student-form {
+  .student-form {
     grid-template-columns: 72px minmax(0, 1fr) 38px;
   }
 
-.stub-grid {
+  .stub-grid {
     grid-template-columns: 1fr;
   }
-
 }
