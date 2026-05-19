@@ -1,4 +1,6 @@
 import {
+  LESSON_TOOLS_MIGRATION_KEY,
+  LESSON_TOOLS_STORAGE_KEY,
   STUDENT_ROSTER_MIGRATION_KEY,
   STUDENT_ROSTER_STORAGE_KEY,
   localStorageDashboardAdapter,
@@ -23,4 +25,6 @@ export const WIDGET_STORAGE_KEYS = {
     "teacher-widget-dashboard:sticky-notes:migration-version",
   studentRoster: STUDENT_ROSTER_STORAGE_KEY,
   studentRosterMigrationVersion: STUDENT_ROSTER_MIGRATION_KEY,
+  lessonTools: LESSON_TOOLS_STORAGE_KEY,
+  lessonToolsMigrationVersion: LESSON_TOOLS_MIGRATION_KEY,
 } as const;

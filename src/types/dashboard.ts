@@ -9,6 +9,7 @@ export type DashboardWidgetType =
   | "tasks"
   | "custom-alerts"
   | "sticky-notes"
+  | "lesson-tools"
   | "neis-api"
   | "excel-upload"
   | "student-roster"
@@ -135,4 +136,80 @@ export interface StudentRosterState {
   attendanceRecords: AttendanceRecord[];
   counselingRecords: CounselingRecord[];
   studentStatusMemos: StudentStatusMemo[];
+}
+
+export interface ScoreboardEntry {
+  studentId: string;
+  score: number;
+  updatedAt: string;
+}
+
+export interface PickHistoryItem {
+  id: string;
+  classId: string;
+  pickedStudentIds: string[];
+  pickedAt: string;
+  mode: "one" | "multiple";
+}
+
+export type LessonToolRunStatus = "idle" | "running" | "paused" | "completed";
+
+export interface LessonPickOptionsState {
+  presentOnly: boolean;
+}
+
+export interface TimerToolState {
+  minutes: number;
+  seconds: number;
+  remainingSeconds: number;
+  status: LessonToolRunStatus;
+  updatedAt: string | null;
+}
+
+export interface PomodoroToolState {
+  durationSeconds: number;
+  breakDurationSeconds: number;
+  remainingSeconds: number;
+  status: LessonToolRunStatus;
+  mode: "focus" | "break";
+  completedCount: number;
+  updatedAt: string | null;
+}
+
+export interface LadderMatchItem {
+  id: string;
+  participant: string;
+  result: string;
+}
+
+export interface LadderToolState {
+  participantsText: string;
+  resultsText: string;
+  matches: LadderMatchItem[];
+  updatedAt: string | null;
+}
+
+export interface RouletteToolState {
+  itemsText: string;
+  selectedItem: string | null;
+  spinCount: number;
+  updatedAt: string | null;
+}
+
+export interface QrCodeToolState {
+  inputText: string;
+  lastGeneratedText: string;
+  updatedAt: string | null;
+}
+
+export interface LessonToolsState {
+  selectedClassId: string | null;
+  scoreboardEntries: ScoreboardEntry[];
+  pickHistory: PickHistoryItem[];
+  pickOptions: LessonPickOptionsState;
+  timerState: TimerToolState;
+  pomodoroState: PomodoroToolState;
+  ladderState: LadderToolState;
+  rouletteState: RouletteToolState;
+  qrCodeState: QrCodeToolState;
 }

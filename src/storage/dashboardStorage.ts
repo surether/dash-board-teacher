@@ -3,11 +3,31 @@ import type {
   AttendanceStatus,
   ClassInfo,
   CounselingRecord,
+  LadderMatchItem,
+  LadderToolState,
+  LessonPickOptionsState,
+  LessonToolRunStatus,
+  LessonToolsState,
+  PickHistoryItem,
+  PomodoroToolState,
+  QrCodeToolState,
+  RouletteToolState,
   SchoolInfo,
+  ScoreboardEntry,
   StudentInfo,
   StudentRosterState,
   StudentStatusMemo,
+  TimerToolState,
 } from "../types/dashboard";
+import {
+  clampTimerInput,
+  createDefaultLadderState,
+  createDefaultPickOptionsState,
+  createDefaultPomodoroState,
+  createDefaultQrCodeState,
+  createDefaultRouletteState,
+  createDefaultTimerState,
+} from "../utils/lessonToolsUtils";
 
 export const STUDENT_ROSTER_SCHEMA_VERSION = 1;
 export const STUDENT_ROSTER_STORAGE_KEY =
@@ -17,6 +37,13 @@ export const STUDENT_ROSTER_MIGRATION_KEY =
 export const STUDENT_ROSTER_UPDATED_EVENT =
   "teacher-widget-dashboard:student-roster-updated";
 
+export const LESSON_TOOLS_SCHEMA_VERSION = 1;
+export const LESSON_TOOLS_STORAGE_KEY =
+  "teacher-widget-dashboard:lesson-tools:v1";
+export const LESSON_TOOLS_MIGRATION_KEY =
+  "teacher-widget-dashboard:lesson-tools:migration-version";
+export const LESSON_TOOLS_UPDATED_EVENT =
+  "teacher-widget-dashboard:lesson-tools-updated";
 
 export interface DashboardStorageAdapter {
   getItem<T>(key: string): Promise<T | null>;
@@ -24,6 +51,8 @@ export interface DashboardStorageAdapter {
   removeItem(key: string): Promise<void>;
   loadStudentRosterState(): Promise<StudentRosterState>;
   saveStudentRosterState(state: StudentRosterState): Promise<void>;
+  loadLessonToolsState(): Promise<LessonToolsState>;
+  saveLessonToolsState(state: LessonToolsState): Promise<void>;
 }
 
 interface StudentRosterStorageEnvelope {
@@ -32,6 +61,11 @@ interface StudentRosterStorageEnvelope {
   updatedAt: string;
 }
 
+interface LessonToolsStorageEnvelope {
+  version: number;
+  state: LessonToolsState;
+  updatedAt: string;
+}
 
 function createEmptyStudentRosterState(): StudentRosterState {
   return {
@@ -45,6 +79,19 @@ function createEmptyStudentRosterState(): StudentRosterState {
   };
 }
 
+function createEmptyLessonToolsState(): LessonToolsState {
+  return {
+    selectedClassId: null,
+    scoreboardEntries: [],
+    pickHistory: [],
+    pickOptions: createDefaultPickOptionsState(),
+    timerState: createDefaultTimerState(),
+    pomodoroState: createDefaultPomodoroState(),
+    ladderState: createDefaultLadderState(),
+    rouletteState: createDefaultRouletteState(),
+    qrCodeState: createDefaultQrCodeState(),
+  };
+}
 
 function readStorageValue<T>(key: string): T | null {
   if (typeof window === "undefined") {
@@ -97,6 +144,13 @@ function asNumber(value: unknown, fallback = 0) {
   return Number.isFinite(numericValue) ? numericValue : fallback;
 }
 
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
+}
 
 function isAttendanceStatus(value: unknown): value is AttendanceStatus {
   return (
@@ -109,6 +163,20 @@ function isAttendanceStatus(value: unknown): value is AttendanceStatus {
   );
 }
 
+function isPickMode(value: unknown): value is PickHistoryItem["mode"] {
+  return value === "one" || value === "multiple";
+}
+
+function isLessonToolRunStatus(
+  value: unknown,
+): value is LessonToolRunStatus {
+  return (
+    value === "idle" ||
+    value === "running" ||
+    value === "paused" ||
+    value === "completed"
+  );
+}
 
 function normalizeSchools(value: unknown): SchoolInfo[] {
   if (!Array.isArray(value)) {
@@ -217,6 +285,183 @@ function normalizeStudentStatusMemos(value: unknown): StudentStatusMemo[] {
   });
 }
 
+function normalizeScoreboardEntries(value: unknown): ScoreboardEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isObject)
+    .map((entry) => ({
+      studentId: asString(entry.studentId),
+      score: asNumber(entry.score),
+      updatedAt: asString(entry.updatedAt, new Date().toISOString()),
+    }))
+    .filter((entry) => entry.studentId);
+}
+
+function normalizePickHistory(value: unknown): PickHistoryItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isObject)
+    .map((history, index) => {
+      const pickedStudentIds = asStringArray(history.pickedStudentIds);
+
+      return {
+        id: asString(history.id, `pick-${index}`),
+        classId: asString(history.classId),
+        pickedStudentIds,
+        pickedAt: asString(history.pickedAt, new Date().toISOString()),
+        mode: isPickMode(history.mode)
+          ? history.mode
+          : pickedStudentIds.length <= 1
+            ? "one"
+            : "multiple",
+      };
+    })
+    .filter((history) => history.classId && history.pickedStudentIds.length > 0);
+}
+
+function normalizePickOptions(value: unknown): LessonPickOptionsState {
+  const fallback = createDefaultPickOptionsState();
+
+  if (!isObject(value)) {
+    return fallback;
+  }
+
+  return {
+    presentOnly:
+      typeof value.presentOnly === "boolean"
+        ? value.presentOnly
+        : fallback.presentOnly,
+  };
+}
+
+function normalizeLadderMatches(value: unknown): LadderMatchItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(isObject)
+    .map((match, index) => ({
+      id: asString(match.id, `ladder-${index}`),
+      participant: asString(match.participant),
+      result: asString(match.result),
+    }))
+    .filter((match) => match.participant && match.result);
+}
+
+function normalizeTimerState(value: unknown): TimerToolState {
+  const fallback = createDefaultTimerState();
+
+  if (!isObject(value)) {
+    return fallback;
+  }
+
+  const minutes = clampTimerInput(value.minutes, 0, 180);
+  const seconds = clampTimerInput(value.seconds, 0, 59);
+  const totalSeconds = minutes * 60 + seconds;
+  const remainingSeconds = Math.max(
+    0,
+    Math.min(asNumber(value.remainingSeconds, totalSeconds), totalSeconds),
+  );
+
+  return {
+    minutes,
+    seconds,
+    remainingSeconds,
+    status: isLessonToolRunStatus(value.status) ? value.status : fallback.status,
+    updatedAt: asOptionalString(value.updatedAt) ?? null,
+  };
+}
+
+function normalizePomodoroState(value: unknown): PomodoroToolState {
+  const fallback = createDefaultPomodoroState();
+
+  if (!isObject(value)) {
+    return fallback;
+  }
+
+  const durationSeconds = Math.max(
+    60,
+    Math.min(asNumber(value.durationSeconds, fallback.durationSeconds), 180 * 60),
+  );
+  const breakDurationSeconds = Math.max(
+    60,
+    Math.min(
+      asNumber(value.breakDurationSeconds, fallback.breakDurationSeconds),
+      60 * 60,
+    ),
+  );
+  const mode = value.mode === "break" ? "break" : "focus";
+  const activeDurationSeconds =
+    mode === "break" ? breakDurationSeconds : durationSeconds;
+  const remainingSeconds = Math.max(
+    0,
+    Math.min(
+      asNumber(value.remainingSeconds, activeDurationSeconds),
+      activeDurationSeconds,
+    ),
+  );
+
+  return {
+    durationSeconds,
+    breakDurationSeconds,
+    remainingSeconds,
+    status: isLessonToolRunStatus(value.status) ? value.status : fallback.status,
+    mode,
+    completedCount: Math.max(0, asNumber(value.completedCount)),
+    updatedAt: asOptionalString(value.updatedAt) ?? null,
+  };
+}
+
+function normalizeLadderState(value: unknown): LadderToolState {
+  const fallback = createDefaultLadderState();
+
+  if (!isObject(value)) {
+    return fallback;
+  }
+
+  return {
+    participantsText: asString(value.participantsText),
+    resultsText: asString(value.resultsText),
+    matches: normalizeLadderMatches(value.matches),
+    updatedAt: asOptionalString(value.updatedAt) ?? null,
+  };
+}
+
+function normalizeRouletteState(value: unknown): RouletteToolState {
+  const fallback = createDefaultRouletteState();
+
+  if (!isObject(value)) {
+    return fallback;
+  }
+
+  return {
+    itemsText: asString(value.itemsText),
+    selectedItem: asOptionalString(value.selectedItem) ?? null,
+    spinCount: Math.max(0, asNumber(value.spinCount)),
+    updatedAt: asOptionalString(value.updatedAt) ?? null,
+  };
+}
+
+function normalizeQrCodeState(value: unknown): QrCodeToolState {
+  const fallback = createDefaultQrCodeState();
+
+  if (!isObject(value)) {
+    return fallback;
+  }
+
+  return {
+    inputText: asString(value.inputText),
+    lastGeneratedText: asString(value.lastGeneratedText),
+    updatedAt: asOptionalString(value.updatedAt) ?? null,
+  };
+}
 
 function extractStudentRosterState(value: unknown): unknown {
   if (isObject(value) && "state" in value) {
@@ -226,6 +471,13 @@ function extractStudentRosterState(value: unknown): unknown {
   return value;
 }
 
+function extractLessonToolsState(value: unknown): unknown {
+  if (isObject(value) && "state" in value) {
+    return value.state;
+  }
+
+  return value;
+}
 
 function normalizeStudentRosterState(value: unknown): StudentRosterState {
   if (!isObject(value)) {
@@ -247,6 +499,23 @@ function normalizeStudentRosterState(value: unknown): StudentRosterState {
   };
 }
 
+function normalizeLessonToolsState(value: unknown): LessonToolsState {
+  if (!isObject(value)) {
+    return createEmptyLessonToolsState();
+  }
+
+  return {
+    selectedClassId: asOptionalString(value.selectedClassId) ?? null,
+    scoreboardEntries: normalizeScoreboardEntries(value.scoreboardEntries),
+    pickHistory: normalizePickHistory(value.pickHistory),
+    pickOptions: normalizePickOptions(value.pickOptions),
+    timerState: normalizeTimerState(value.timerState),
+    pomodoroState: normalizePomodoroState(value.pomodoroState),
+    ladderState: normalizeLadderState(value.ladderState),
+    rouletteState: normalizeRouletteState(value.rouletteState),
+    qrCodeState: normalizeQrCodeState(value.qrCodeState),
+  };
+}
 
 function createStudentRosterEnvelope(
   state: StudentRosterState,
@@ -258,6 +527,15 @@ function createStudentRosterEnvelope(
   };
 }
 
+function createLessonToolsEnvelope(
+  state: LessonToolsState,
+): LessonToolsStorageEnvelope {
+  return {
+    version: LESSON_TOOLS_SCHEMA_VERSION,
+    state: normalizeLessonToolsState(state),
+    updatedAt: new Date().toISOString(),
+  };
+}
 
 function notifyStudentRosterUpdated(state: StudentRosterState) {
   if (typeof window === "undefined") {
@@ -271,6 +549,17 @@ function notifyStudentRosterUpdated(state: StudentRosterState) {
   );
 }
 
+function notifyLessonToolsUpdated(state: LessonToolsState) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent<LessonToolsState>(LESSON_TOOLS_UPDATED_EVENT, {
+      detail: state,
+    }),
+  );
+}
 
 export const localStorageDashboardAdapter: DashboardStorageAdapter = {
   async getItem<T>(key: string) {
@@ -314,5 +603,36 @@ export const localStorageDashboardAdapter: DashboardStorageAdapter = {
       STUDENT_ROSTER_SCHEMA_VERSION,
     );
     notifyStudentRosterUpdated(normalizedState);
-  }
+  },
+
+  async loadLessonToolsState() {
+    const storedValue = readStorageValue<
+      LessonToolsState | LessonToolsStorageEnvelope
+    >(LESSON_TOOLS_STORAGE_KEY);
+
+    const normalizedState = normalizeLessonToolsState(
+      extractLessonToolsState(storedValue),
+    );
+
+    writeStorageValue(
+      LESSON_TOOLS_MIGRATION_KEY,
+      LESSON_TOOLS_SCHEMA_VERSION,
+    );
+
+    return normalizedState;
+  },
+
+  async saveLessonToolsState(state: LessonToolsState) {
+    const normalizedState = normalizeLessonToolsState(state);
+
+    writeStorageValue(
+      LESSON_TOOLS_STORAGE_KEY,
+      createLessonToolsEnvelope(normalizedState),
+    );
+    writeStorageValue(
+      LESSON_TOOLS_MIGRATION_KEY,
+      LESSON_TOOLS_SCHEMA_VERSION,
+    );
+    notifyLessonToolsUpdated(normalizedState);
+  },
 };
