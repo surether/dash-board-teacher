@@ -67,3 +67,72 @@ export interface MemoState {
   text: string;
   updatedAt: string | null;
 }
+
+export interface SchoolInfo {
+  id: string;
+  name: string;
+  neisSchoolCode?: string;
+  officeCode?: string;
+}
+
+export interface ClassInfo {
+  id: string;
+  schoolId: string;
+  grade: number;
+  classNumber: number;
+  displayName: string;
+}
+
+export interface StudentInfo {
+  id: string;
+  classId: string;
+  number: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AttendanceStatus =
+  | "present"
+  | "absent"
+  | "late"
+  | "earlyLeave"
+  | "officialAbsent"
+  | "unknown";
+
+export interface AttendanceRecord {
+  id: string;
+  studentId: string;
+  date: string;
+  status: AttendanceStatus;
+  note?: string;
+  updatedAt: string;
+}
+
+export interface CounselingRecord {
+  id: string;
+  studentId: string;
+  date: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentStatusMemo {
+  id: string;
+  studentId: string;
+  date: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudentRosterState {
+  selectedClassId: string | null;
+  schools: SchoolInfo[];
+  classes: ClassInfo[];
+  students: StudentInfo[];
+  attendanceRecords: AttendanceRecord[];
+  counselingRecords: CounselingRecord[];
+  studentStatusMemos: StudentStatusMemo[];
+}

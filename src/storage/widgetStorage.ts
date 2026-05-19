@@ -1,4 +1,8 @@
-import { localStorageDashboardAdapter } from "./dashboardStorage";
+import {
+  STUDENT_ROSTER_MIGRATION_KEY,
+  STUDENT_ROSTER_STORAGE_KEY,
+  localStorageDashboardAdapter,
+} from "./dashboardStorage";
 
 export const widgetStorage = localStorageDashboardAdapter;
 
@@ -17,4 +21,6 @@ export const WIDGET_STORAGE_KEYS = {
   stickyNotes: "teacher-widget-dashboard:sticky-notes:v1",
   stickyNotesMigrationVersion:
     "teacher-widget-dashboard:sticky-notes:migration-version",
+  studentRoster: STUDENT_ROSTER_STORAGE_KEY,
+  studentRosterMigrationVersion: STUDENT_ROSTER_MIGRATION_KEY,
 } as const;

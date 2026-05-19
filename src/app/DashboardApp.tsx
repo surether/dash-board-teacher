@@ -3,6 +3,7 @@ import type { Layout, Layouts } from "react-grid-layout";
 import { CollapsePanel } from "../layout/CollapsePanel";
 import { DashboardGrid } from "../layout/DashboardGrid";
 import { WidgetToolbar } from "../layout/WidgetToolbar";
+import { SchoolClassSettings } from "../settings/SchoolClassSettings";
 import {
   localStorageDashboardAdapter,
   type DashboardStorageAdapter,
@@ -15,7 +16,6 @@ import type { ThemeMode, WidgetLayoutState } from "../types/dashboard";
 import { AcademicCalendarStub } from "../widgets/stubs/AcademicCalendarStub";
 import { ExcelUploadStub } from "../widgets/stubs/ExcelUploadStub";
 import { NeisApiStub } from "../widgets/stubs/NeisApiStub";
-import { StudentRosterStub } from "../widgets/stubs/StudentRosterStub";
 import { defaultLayouts, primaryWidgets } from "./dashboardConfig";
 
 const storage: DashboardStorageAdapter = localStorageDashboardAdapter;
@@ -178,6 +178,13 @@ export function DashboardApp() {
         onResetLayout={handleResetLayout}
       />
 
+      <CollapsePanel
+        title="전체 설정"
+        summary="학교와 기본 반을 수동으로 관리합니다."
+      >
+        <SchoolClassSettings />
+      </CollapsePanel>
+
       <DashboardGrid
         widgets={primaryWidgets}
         layouts={layouts}
@@ -186,12 +193,11 @@ export function DashboardApp() {
 
       <CollapsePanel
         title="추가 예정 위젯"
-        summary="NEIS API, 엑셀 업로드, 학생 명렬표, 학사일정은 아직 Stub 상태입니다."
+        summary="NEIS API, 엑셀 업로드, 학사일정은 아직 Stub 상태입니다."
       >
         <div className="stub-grid">
           <NeisApiStub />
           <ExcelUploadStub />
-          <StudentRosterStub />
           <AcademicCalendarStub />
         </div>
       </CollapsePanel>

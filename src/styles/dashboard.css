@@ -1,3 +1,4 @@
+
 * {
   box-sizing: border-box;
 }
@@ -294,6 +295,7 @@ button {
 .task-widget,
 .custom-alert-widget,
 .sticky-notes-widget,
+.student-roster-widget {
   height: 100%;
 }
 
@@ -363,6 +365,11 @@ button {
 .memo-widget textarea:focus,
 .inline-form input:focus,
 .task-form input:focus,
+.school-settings input:focus,
+.school-settings select:focus,
+.student-roster-widget input:focus,
+.student-roster-widget select:focus,
+.student-roster-widget textarea:focus,
 .sticky-note-form input:focus,
 .sticky-note-list textarea:focus,
 .alert-form input:focus {
@@ -772,6 +779,553 @@ button {
   background: var(--apple-surface-strong);
 }
 
+.settings-stack,
+.school-settings {
+  display: grid;
+}
+
+.settings-stack {
+  gap: 18px;
+}
+
+.school-settings {
+  gap: 16px;
+}
+
+.school-settings__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.school-settings h3,
+.school-settings h4,
+.school-settings p {
+  margin: 0;
+}
+
+.school-settings h3 {
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+.school-settings h4 {
+  font-size: 0.9rem;
+}
+
+.school-settings p,
+.school-settings__header span,
+.settings-list,
+.settings-select-row {
+  color: var(--apple-text-muted);
+  font-size: 0.8rem;
+}
+
+.school-settings__header span {
+  width: fit-content;
+  padding: 6px 9px;
+  border-radius: var(--apple-radius-control);
+  background: var(--apple-surface-strong);
+  font-weight: 700;
+}
+
+.school-settings__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.settings-section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.settings-form,
+.settings-form label,
+.settings-select-row {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.settings-form--class {
+  grid-template-columns: minmax(0, 1.2fr) 86px 86px auto;
+}
+
+.settings-form label,
+.settings-select-row {
+  font-weight: 650;
+}
+
+.settings-form input,
+.settings-form select,
+.settings-select-row select,
+.roster-control select,
+.roster-date-control input,
+.student-roster-tools input,
+.student-form input,
+.student-card__attendance select,
+.attendance-control select,
+.attendance-control input,
+.student-notes textarea {
+  min-width: 0;
+  border: 1px solid var(--apple-border);
+  border-radius: 14px;
+  outline: none;
+  color: var(--apple-text);
+  background: var(--apple-surface-muted);
+}
+
+.settings-form input,
+.settings-form select,
+.settings-select-row select,
+.roster-control select,
+.roster-date-control input,
+.student-roster-tools input,
+.student-card__attendance select,
+.student-form input {
+  height: 38px;
+  padding: 0 12px;
+}
+
+.attendance-control select,
+.attendance-control input {
+  height: 34px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+}
+
+.settings-form button,
+.settings-actions button,
+.student-form button,
+.student-card__header button,
+.student-notes button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 14px;
+  color: white;
+  background: var(--apple-accent-blue);
+  font-size: 0.82rem;
+  font-weight: 720;
+  cursor: pointer;
+  transition:
+    transform var(--apple-transition),
+    background var(--apple-transition),
+    opacity var(--apple-transition);
+}
+
+.settings-form button:hover,
+.settings-actions button:hover,
+.student-form button:hover,
+.student-card__header button:hover,
+.student-notes button:hover {
+  transform: translateY(-1px);
+}
+
+.settings-form button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+  transform: none;
+}
+
+.settings-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.settings-list li {
+  padding: 6px 9px;
+  border-radius: var(--apple-radius-control);
+  background: var(--apple-surface-muted);
+}
+
+.settings-list__empty {
+  color: var(--apple-text-faint);
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.student-roster-widget {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roster-control,
+.roster-summary,
+.student-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.roster-control label {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 5px;
+  color: var(--apple-text-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.roster-date-control {
+  flex: 0 0 150px;
+}
+
+.roster-control span,
+.roster-summary span {
+  color: var(--apple-text-muted);
+  font-size: 0.76rem;
+}
+
+.roster-summary {
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: var(--apple-surface-muted);
+}
+
+.roster-summary strong {
+  font-size: 0.88rem;
+}
+
+.student-roster-tools label {
+  display: grid;
+  gap: 5px;
+  color: var(--apple-text-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.attendance-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.attendance-summary span {
+  padding: 5px 8px;
+  border-radius: var(--apple-radius-control);
+  color: var(--attendance-color, var(--apple-text-muted));
+  background: color-mix(
+    in srgb,
+    var(--attendance-color, var(--apple-accent-slate)) 12%,
+    transparent
+  );
+  font-size: 0.72rem;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.student-form {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 38px;
+  gap: 8px;
+}
+
+.student-form button {
+  width: 38px;
+  padding: 0;
+}
+
+.student-list {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  margin: 0;
+  padding: 0 2px 2px 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.student-card,
+.student-list__empty,
+.student-roster-empty {
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+  background: var(--apple-surface-muted);
+}
+
+.student-card {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+
+.student-card__header {
+  display: grid;
+  grid-template-columns: minmax(132px, 1fr) 132px minmax(170px, 1.25fr) auto;
+  align-items: center;
+}
+
+.student-card__identity,
+.student-card__meta,
+.student-card__actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.student-card__identity strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-card__attendance {
+  display: grid;
+  gap: 4px;
+  color: var(--apple-text-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.student-card__attendance span {
+  line-height: 1;
+}
+
+.student-card__meta {
+  flex-wrap: wrap;
+}
+
+.student-card__meta span {
+  max-width: 148px;
+  overflow: hidden;
+  padding: 5px 8px;
+  border-radius: var(--apple-radius-control);
+  color: var(--apple-text-muted);
+  background: var(--apple-surface-strong);
+  font-size: 0.72rem;
+  font-weight: 720;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.student-card__meta span[data-active="true"] {
+  color: var(--apple-accent-green);
+  background: color-mix(in srgb, var(--apple-accent-green) 12%, transparent);
+}
+
+.student-card__actions {
+  justify-content: flex-end;
+}
+
+.student-card__header button {
+  width: 30px;
+  min-height: 30px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: var(--apple-text-muted);
+  background: transparent;
+}
+
+.student-card[data-expanded="true"] .student-card__actions button:first-child svg {
+  transform: rotate(180deg);
+}
+
+.student-card__actions svg {
+  transition: transform var(--apple-transition);
+}
+
+.attendance-pill {
+  --attendance-color: var(--apple-accent-slate);
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: var(--attendance-color);
+  background: color-mix(in srgb, var(--attendance-color) 14%, transparent);
+  font-size: 0.72rem;
+  font-weight: 760;
+}
+
+.attendance-pill[data-status="present"],
+.attendance-summary span[data-status="present"] {
+  --attendance-color: var(--apple-accent-green);
+}
+
+.attendance-pill[data-status="absent"],
+.attendance-summary span[data-status="absent"] {
+  --attendance-color: var(--apple-danger);
+}
+
+.attendance-pill[data-status="late"],
+.attendance-summary span[data-status="late"] {
+  --attendance-color: var(--apple-accent-orange);
+}
+
+.attendance-pill[data-status="earlyLeave"],
+.attendance-summary span[data-status="earlyLeave"] {
+  --attendance-color: var(--apple-accent-purple);
+}
+
+.attendance-pill[data-status="officialAbsent"],
+.attendance-summary span[data-status="officialAbsent"] {
+  --attendance-color: var(--apple-accent-blue);
+}
+
+.attendance-pill[data-status="unknown"],
+.attendance-summary span[data-status="unknown"] {
+  --attendance-color: var(--apple-accent-slate);
+}
+
+.attendance-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.attendance-control label {
+  display: grid;
+  gap: 5px;
+  color: var(--apple-text-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.student-card__detail {
+  display: grid;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.student-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.student-notes label {
+  display: grid;
+  gap: 6px;
+  color: var(--apple-text-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.student-notes textarea {
+  min-height: 62px;
+  resize: vertical;
+  padding: 10px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.student-notes button {
+  min-height: 32px;
+  color: var(--apple-text);
+  background: var(--apple-surface-strong);
+  box-shadow: var(--apple-shadow-control);
+}
+
+.student-list__empty,
+.student-roster-empty {
+  padding: 18px;
+  color: var(--apple-text-muted);
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.student-history-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.student-history-grid section {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--apple-surface-strong) 72%, transparent);
+}
+
+.student-history-grid h4,
+.student-history-empty,
+.student-history-list {
+  margin: 0;
+}
+
+.student-history-grid h4 {
+  font-size: 0.78rem;
+  font-weight: 760;
+}
+
+.student-history-list {
+  display: grid;
+  gap: 5px;
+  padding: 0;
+  list-style: none;
+}
+
+.student-history-list li {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.student-history-list time,
+.student-history-empty {
+  color: var(--apple-text-muted);
+  font-size: 0.7rem;
+}
+
+.student-history-list span {
+  overflow: hidden;
+  color: var(--apple-text);
+  font-size: 0.76rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pick-option-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+  background: var(--apple-surface-muted);
+  color: var(--apple-text);
+  font-size: 0.82rem;
+  font-weight: 720;
+}
+
+.pick-option-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--apple-accent-green);
+}
+
+.pick-option-toggle small {
+  grid-column: 2;
+  color: var(--apple-text-muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
 .collapse-panel {
   margin-top: 22px;
   border: 1px solid var(--apple-border);
@@ -862,34 +1416,64 @@ button {
   line-height: 1.45;
 }
 
+
 @media (max-width: 780px) {
-  .dashboard-app {
+.dashboard-app {
     padding: 14px;
   }
 
-  .widget-toolbar {
+.widget-toolbar {
     position: static;
     align-items: stretch;
     flex-direction: column;
   }
 
-  .widget-toolbar__actions {
+.widget-toolbar__actions {
     justify-content: space-between;
   }
 
-  .stub-grid {
+.stub-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+.school-settings__grid,
+.student-notes,
+.student-history-grid {
+    grid-template-columns: 1fr;
+  }
+
+.student-card__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+.student-card__attendance,
+.student-card__meta {
+    grid-column: 1 / -1;
+  }
+
+.student-card__actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+.settings-form--class {
+    grid-template-columns: minmax(0, 1fr) 86px 86px;
+  }
+
+.settings-form--class button {
+    grid-column: 1 / -1;
+  }
+
 }
 
 @media (max-width: 640px) {
-  .dashboard-grid {
+.dashboard-grid {
     display: grid;
     height: auto !important;
     gap: 16px;
   }
 
-  .dashboard-grid > .react-grid-item {
+.dashboard-grid > .react-grid-item {
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -898,47 +1482,84 @@ button {
     transform: none !important;
   }
 
-  .dashboard-grid .widget-frame {
+.dashboard-grid .widget-frame {
     min-height: 224px;
   }
 
-  .dashboard-grid .react-resizable-handle {
+.dashboard-grid .react-resizable-handle {
     display: none;
   }
+
 }
 
 @media (max-width: 520px) {
-  .task-form {
+.school-settings__header {
+    flex-direction: column;
+  }
+
+.settings-form,
+.settings-form--class {
+    grid-template-columns: 1fr;
+  }
+
+.settings-actions {
+    justify-content: stretch;
+  }
+
+.settings-actions button {
+    width: 100%;
+  }
+
+.task-form {
     grid-template-columns: minmax(0, 1fr) 38px;
   }
 
-  .task-form .priority-picker,
-  .task-form input[type="date"] {
+.task-form .priority-picker,
+.task-form input[type="date"] {
     grid-column: 1 / -1;
   }
 
-  .alert-form {
+.alert-form {
     grid-template-columns: minmax(0, 1fr) 38px;
   }
 
-  .alert-form input[type="date"] {
+.alert-form input[type="date"] {
     grid-column: 1 / -1;
     grid-row: 2;
   }
 
-  .sticky-note-form {
+.sticky-note-form {
     grid-template-columns: minmax(0, 1fr) 38px;
   }
 
-  .sticky-note-form .sticky-color-picker {
+.sticky-note-form .sticky-color-picker {
     grid-column: 1 / -1;
   }
 
-  .sticky-note-list {
+.sticky-note-list {
     grid-template-columns: 1fr;
   }
 
-  .stub-grid {
+.roster-control,
+.roster-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+.roster-date-control {
+    flex-basis: auto;
+  }
+
+.attendance-control {
     grid-template-columns: 1fr;
   }
+
+.student-form {
+    grid-template-columns: 72px minmax(0, 1fr) 38px;
+  }
+
+.stub-grid {
+    grid-template-columns: 1fr;
+  }
+
 }
