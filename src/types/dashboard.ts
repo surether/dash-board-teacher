@@ -257,3 +257,101 @@ export interface ExcelImportDraft {
   issues: ExcelImportValidationIssue[];
   status: ExcelImportDraftStatus;
 }
+
+export type ExcelImportPipelineStage =
+  | "source"
+  | "parse"
+  | "mapping"
+  | "preview"
+  | "validation"
+  | "importPlan"
+  | "apply";
+
+export type ExcelImportAdapterStatus =
+  | "idle"
+  | "ready"
+  | "blocked"
+  | "error";
+
+export interface ExcelImportSourceMeta {
+  id: string;
+  fileName: string;
+  selectedAt: string;
+  size?: number;
+  mimeType?: string;
+}
+
+export interface ExcelImportSourceResult {
+  status: ExcelImportAdapterStatus;
+  source: ExcelImportSourceMeta | null;
+  issues: ExcelImportValidationIssue[];
+}
+
+export interface ExcelParsedSheet {
+  sheetName: string;
+  columns: string[];
+  rows: ExcelPreviewRow[];
+}
+
+export interface ExcelParsedWorkbook {
+  source: ExcelImportSourceMeta;
+  sheets: ExcelParsedSheet[];
+  parsedAt: string;
+}
+
+export interface ExcelWorkbookParseResult {
+  status: ExcelImportAdapterStatus;
+  workbook: ExcelParsedWorkbook | null;
+  issues: ExcelImportValidationIssue[];
+}
+
+export type ExcelImportApplyBlockReason =
+  | "adapter-not-implemented"
+  | "no-selected-class"
+  | "validation-errors"
+  | "student-roster-plan-only"
+  | "timetable-storage-not-ready";
+
+export interface StudentRosterImportCandidate {
+  rowIndex: number;
+  number: number | null;
+  name: string;
+  gender?: string;
+  studentCode?: string;
+  note?: string;
+}
+
+export interface StudentRosterImportPlanSummary {
+  totalRows: number;
+  candidateCount: number;
+  addCount: number;
+  errorCount: number;
+  warningCount: number;
+}
+
+export interface StudentRosterImportPlan {
+  target: "studentRoster";
+  selectedClassId: string | null;
+  candidates: StudentRosterImportCandidate[];
+  issues: ExcelImportValidationIssue[];
+  summary: StudentRosterImportPlanSummary;
+  canApply: boolean;
+  blockReason?: ExcelImportApplyBlockReason;
+  createdAt: string;
+}
+
+export type TimetableImportApplyTarget = Extract<
+  ExcelImportTarget,
+  "teacherTimetable" | "classTimetable"
+>;
+
+export interface TimetableImportApplyBlocked {
+  target: TimetableImportApplyTarget;
+  status: "applyBlocked";
+  reason: "timetable-storage-not-ready";
+  message: string;
+}
+
+export type ExcelImportApplyBoundary =
+  | StudentRosterImportPlan
+  | TimetableImportApplyBlocked;
