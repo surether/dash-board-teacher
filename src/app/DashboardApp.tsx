@@ -7,15 +7,16 @@ import {
   localStorageDashboardAdapter,
   type DashboardStorageAdapter,
 } from "../storage/dashboardStorage";
-import type { ThemeMode } from "../types/dashboard";
+import {
+  STORAGE_SCHEMA_VERSION,
+  WIDGET_STORAGE_KEYS,
+} from "../storage/widgetStorage";
+import type { ThemeMode, WidgetLayoutState } from "../types/dashboard";
 import { AcademicCalendarStub } from "../widgets/stubs/AcademicCalendarStub";
 import { ExcelUploadStub } from "../widgets/stubs/ExcelUploadStub";
 import { NeisApiStub } from "../widgets/stubs/NeisApiStub";
 import { StudentRosterStub } from "../widgets/stubs/StudentRosterStub";
 import { defaultLayouts, primaryWidgets } from "./dashboardConfig";
-
-const LAYOUT_STORAGE_KEY = "teacher-widget-dashboard:layouts:v1";
-const THEME_STORAGE_KEY = "teacher-widget-dashboard:theme:v1";
 
 const storage: DashboardStorageAdapter = localStorageDashboardAdapter;
 const columnsByBreakpoint: Record<string, number> = {
@@ -78,6 +79,29 @@ function normalizeLayouts(layouts: Layouts | null | undefined): Layouts {
   );
 }
 
+function resolveStoredLayouts(
+  value: Layouts | WidgetLayoutState | null,
+): Layouts | null {
+  if (!value) {
+    return null;
+  }
+
+  const candidate = (value as WidgetLayoutState).layouts;
+  if (candidate && !Array.isArray(candidate)) {
+    return candidate;
+  }
+
+  return value as Layouts;
+}
+
+function createLayoutState(layouts: Layouts): WidgetLayoutState {
+  return {
+    version: STORAGE_SCHEMA_VERSION,
+    layouts,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function DashboardApp() {
   const [layouts, setLayouts] = useState<Layouts>(defaultLayouts);
   const [theme, setTheme] = useState<ThemeMode>(getPreferredTheme);
@@ -88,16 +112,17 @@ export function DashboardApp() {
 
     async function hydrateDashboard() {
       const [savedLayouts, savedTheme] = await Promise.all([
-        storage.getItem<Layouts>(LAYOUT_STORAGE_KEY),
-        storage.getItem<ThemeMode>(THEME_STORAGE_KEY),
+        storage.getItem<Layouts | WidgetLayoutState>(WIDGET_STORAGE_KEYS.layout),
+        storage.getItem<ThemeMode>(WIDGET_STORAGE_KEYS.theme),
       ]);
 
       if (!isMounted) {
         return;
       }
 
-      if (savedLayouts) {
-        setLayouts(normalizeLayouts(savedLayouts));
+      const resolvedLayouts = resolveStoredLayouts(savedLayouts);
+      if (resolvedLayouts) {
+        setLayouts(normalizeLayouts(resolvedLayouts));
       }
 
       if (savedTheme === "light" || savedTheme === "dark") {
@@ -118,7 +143,7 @@ export function DashboardApp() {
     document.documentElement.dataset.theme = theme;
 
     if (hasHydrated.current) {
-      void storage.setItem(THEME_STORAGE_KEY, theme);
+      void storage.setItem(WIDGET_STORAGE_KEYS.theme, theme);
     }
   }, [theme]);
 
@@ -128,7 +153,10 @@ export function DashboardApp() {
       setLayouts(normalizedLayouts);
 
       if (hasHydrated.current) {
-        void storage.setItem(LAYOUT_STORAGE_KEY, normalizedLayouts);
+        void storage.setItem(
+          WIDGET_STORAGE_KEYS.layout,
+          createLayoutState(normalizedLayouts),
+        );
       }
     },
     [],
@@ -136,7 +164,10 @@ export function DashboardApp() {
 
   const handleResetLayout = useCallback(() => {
     setLayouts(defaultLayouts);
-    void storage.setItem(LAYOUT_STORAGE_KEY, defaultLayouts);
+    void storage.setItem(
+      WIDGET_STORAGE_KEYS.layout,
+      createLayoutState(defaultLayouts),
+    );
   }, []);
 
   return (
@@ -154,8 +185,8 @@ export function DashboardApp() {
       />
 
       <CollapsePanel
-        title="Reserved modules"
-        summary="Phase 2 stubs stay outside the active grid."
+        title="추가 예정 위젯"
+        summary="NEIS API, 엑셀 업로드, 학생 명렬표, 학사일정은 아직 Stub 상태입니다."
       >
         <div className="stub-grid">
           <NeisApiStub />

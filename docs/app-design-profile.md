@@ -22,5 +22,5 @@
 ## Open Assumptions
 
 - The product should feel professional and teacher-facing rather than student-playful.
-- Korean school-system modules are reserved for later, but this phase keeps UI copy in English to avoid premature localization decisions.
+- UI copy defaults to Korean, while technical integration names such as NEIS may remain in English.
 - `localStorage` is acceptable for layout persistence until a SQLite-backed adapter is introduced.

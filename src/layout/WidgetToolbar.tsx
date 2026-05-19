@@ -20,19 +20,19 @@ export function WidgetToolbar({
         </span>
         <div>
           <p>OpenixWidgets</p>
-          <h1>Teacher Dashboard</h1>
+          <h1>교사용 대시보드</h1>
         </div>
       </div>
 
       <div className="widget-toolbar__actions">
-        <div className="segmented-control" aria-label="Theme">
+        <div className="segmented-control" aria-label="테마">
           <button
             type="button"
             className={theme === "light" ? "is-active" : ""}
             aria-pressed={theme === "light"}
-            aria-label="Light theme"
+            aria-label="라이트 테마"
             onClick={() => onThemeChange("light")}
-            title="Light theme"
+            title="라이트 테마"
           >
             <Sun size={16} />
           </button>
@@ -40,9 +40,9 @@ export function WidgetToolbar({
             type="button"
             className={theme === "dark" ? "is-active" : ""}
             aria-pressed={theme === "dark"}
-            aria-label="Dark theme"
+            aria-label="다크 테마"
             onClick={() => onThemeChange("dark")}
-            title="Dark theme"
+            title="다크 테마"
           >
             <Moon size={16} />
           </button>
@@ -52,8 +52,8 @@ export function WidgetToolbar({
           type="button"
           className="icon-button"
           onClick={onResetLayout}
-          title="Reset layout"
-          aria-label="Reset layout"
+          title="레이아웃 초기화"
+          aria-label="레이아웃 초기화"
         >
           <RotateCcw size={17} />
         </button>

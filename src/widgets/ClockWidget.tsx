@@ -9,16 +9,17 @@ export function ClockWidget() {
   }, []);
 
   const formatted = useMemo(() => {
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
+
     return {
-      time: new Intl.DateTimeFormat(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }).format(now),
-      date: new Intl.DateTimeFormat(undefined, {
-        weekday: "long",
+      time: `${hours}:${minutes}:${seconds}`,
+      date: new Intl.DateTimeFormat("ko-KR", {
+        year: "numeric",
         month: "long",
         day: "numeric",
+        weekday: "long",
       }).format(now),
     };
   }, [now]);
@@ -29,7 +30,7 @@ export function ClockWidget() {
       <div className="clock-widget__date">{formatted.date}</div>
       <div className="clock-widget__status">
         <span />
-        Ready for class
+        수업 준비 상태
       </div>
     </div>
   );
