@@ -279,6 +279,7 @@ export interface ExcelImportSourceMeta {
   selectedAt: string;
   size?: number;
   mimeType?: string;
+  lastModified?: number;
 }
 
 export interface ExcelImportSourceResult {

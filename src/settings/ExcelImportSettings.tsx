@@ -45,10 +45,43 @@ const SOURCE_STATUS_LABELS: Record<SourceBoundaryStatus, string> = {
 const SOURCE_STATUS_MESSAGES: Record<SourceBoundaryStatus, string> = {
   idle: "source adapter 요청 전입니다. 실제 파일 선택 입력은 아직 연결하지 않았습니다.",
   requested: "source adapter 경계를 확인하는 중입니다.",
-  ready: "source adapter가 파일 메타데이터를 반환할 준비가 된 상태입니다.",
+  ready: "파일 메타데이터를 받았습니다. 아직 파일 내용은 읽지 않았습니다.",
   blocked: "현재 단계에서는 noop adapter가 실제 파일 선택을 차단합니다.",
   error: "source adapter 요청 중 오류가 발생했습니다.",
 };
+
+function formatFileSize(size: number | undefined) {
+  if (typeof size !== "number") {
+    return "크기 미확인";
+  }
+
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function formatDateTime(value: number | string | undefined) {
+  if (value === undefined) {
+    return "시각 미확인";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "시각 미확인";
+  }
+
+  return date.toLocaleString("ko-KR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
 
 function getIssueLabel(issue: ExcelImportValidationIssue) {
   const row = issue.rowIndex ? `${issue.rowIndex}행` : "전체";
@@ -83,6 +116,15 @@ export function ExcelImportSettings() {
     return { errorCount, warningCount };
   }, [draft.issues]);
   const sourceIssues = sourceResult?.issues ?? [];
+  const sourceMeta = sourceResult?.source;
+  const sourceMetaSummary = sourceMeta
+    ? [
+        `크기 ${formatFileSize(sourceMeta.size)}`,
+        `형식 ${sourceMeta.mimeType || "MIME type 없음"}`,
+        `마지막 수정 ${formatDateTime(sourceMeta.lastModified)}`,
+        `선택 ${formatDateTime(sourceMeta.selectedAt)}`,
+      ].join(" · ")
+    : SOURCE_STATUS_MESSAGES[sourceStatus];
 
   function updateTarget(target: ExcelImportTarget) {
     setDraft(createEmptyImportDraft(target));
@@ -101,7 +143,9 @@ export function ExcelImportSettings() {
     setSourceStatus(result.status);
     setSourceResult(result);
     setNotice(
-      "source picker가 noop adapter의 blocked 결과를 전달했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
+      result.status === "ready"
+        ? "파일 메타데이터를 받았습니다. 파싱과 미리보기 생성은 아직 수행하지 않습니다."
+        : "source picker가 noop adapter의 blocked 결과를 전달했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
     );
   }
 
@@ -189,16 +233,8 @@ export function ExcelImportSettings() {
         </div>
         <div className="excel-import-source__body">
           <div>
-            <strong>
-              {sourceResult?.source?.fileName ?? "선택된 파일 없음"}
-            </strong>
-            <small>
-              {sourceResult?.source
-                ? `${sourceResult.source.selectedAt} · ${
-                    sourceResult.source.mimeType ?? "파일 형식 미확인"
-                  }`
-                : SOURCE_STATUS_MESSAGES[sourceStatus]}
-            </small>
+            <strong>{sourceMeta?.fileName ?? "선택된 파일 없음"}</strong>
+            <small>{sourceMetaSummary}</small>
           </div>
           {sourceIssues.length > 0 ? (
             <ul className="excel-source-issue-list">

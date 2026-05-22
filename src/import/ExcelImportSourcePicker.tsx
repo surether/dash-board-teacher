@@ -1,4 +1,5 @@
 import { Upload } from "lucide-react";
+import type { ChangeEvent } from "react";
 import { useRef } from "react";
 import { noopExcelImportSourceAdapter } from "./excelImportAdapter";
 import type { ExcelImportSourceResult } from "../types/dashboard";
@@ -21,15 +22,42 @@ export function ExcelImportSourcePicker({
   function handleSourceRequest() {
     onRequest();
     inputRef.current?.click();
+    void emitBlockedResult();
   }
 
-  async function handleSourceBoundaryChange() {
+  async function emitBlockedResult() {
     try {
       const result = await noopExcelImportSourceAdapter.selectSource();
       onResult(result);
     } catch {
       onError("source adapter 요청 중 오류가 발생했습니다.");
     }
+  }
+
+  async function handleSourceBoundaryChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const selectedFile = event.currentTarget.files?.item(0);
+
+    if (!selectedFile) {
+      await emitBlockedResult();
+      return;
+    }
+
+    onResult({
+      status: "ready",
+      source: {
+        id: `${selectedFile.name}-${selectedFile.size}-${selectedFile.lastModified}`,
+        fileName: selectedFile.name,
+        selectedAt: new Date().toISOString(),
+        size: selectedFile.size,
+        mimeType: selectedFile.type,
+        lastModified: selectedFile.lastModified,
+      },
+      issues: [],
+    });
+
+    event.currentTarget.value = "";
   }
 
   return (
