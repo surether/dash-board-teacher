@@ -986,6 +986,7 @@ button {
 .excel-import-settings__header,
 .excel-import-settings__controls,
 .excel-import-settings__meta,
+.excel-import-source__header,
 .excel-validation-summary {
   display: flex;
   flex-wrap: wrap;
@@ -994,6 +995,10 @@ button {
 }
 
 .excel-import-settings__header {
+  justify-content: space-between;
+}
+
+.excel-import-source__header {
   justify-content: space-between;
 }
 
@@ -1021,6 +1026,7 @@ button {
 }
 
 .excel-import-settings__header span,
+.excel-import-source__header span,
 .excel-validation-summary span,
 .excel-mapping-list em {
   width: fit-content;
@@ -1052,6 +1058,67 @@ button {
   padding: 10px 12px;
   border-radius: 14px;
   background: var(--apple-surface-muted);
+}
+
+.excel-import-source {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius-card);
+  background: var(--apple-surface-muted);
+}
+
+.excel-import-source__header h4,
+.excel-import-source__header p {
+  margin: 0;
+}
+
+.excel-import-source__header span[data-status="blocked"],
+.excel-source-issue-list li[data-level="warning"] {
+  color: var(--apple-accent-orange);
+}
+
+.excel-import-source__header span[data-status="error"],
+.excel-source-issue-list li[data-level="error"] {
+  color: var(--apple-danger);
+}
+
+.excel-import-source__body {
+  display: grid;
+  gap: 9px;
+}
+
+.excel-import-source__body > div {
+  display: grid;
+  gap: 3px;
+}
+
+.excel-import-source__body strong {
+  font-size: 0.86rem;
+}
+
+.excel-import-source__body small,
+.excel-import-source__body p {
+  color: var(--apple-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.42;
+}
+
+.excel-source-issue-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.excel-source-issue-list li {
+  padding: 8px 9px;
+  border: 1px solid var(--apple-border);
+  border-radius: 12px;
+  background: var(--apple-surface-strong);
+  font-size: 0.78rem;
 }
 
 .excel-import-settings__meta {
@@ -2311,6 +2378,7 @@ button {
   }
 
   .excel-import-settings__header,
+  .excel-import-source__header,
   .excel-import-settings__controls,
   .excel-import-settings__meta {
     align-items: stretch;

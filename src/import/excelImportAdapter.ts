@@ -7,8 +7,7 @@ import type {
 
 const adapterBlockedIssue: ExcelImportValidationIssue = {
   level: "warning",
-  message:
-    "Import source and parser adapters are skeletons only in Phase 3-B2.",
+  message: "현재 단계에서는 파일 선택과 파싱 adapter 경계만 준비되어 있습니다.",
 };
 
 export interface ExcelImportSourceAdapter {

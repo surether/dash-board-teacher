@@ -1,7 +1,10 @@
 import { RotateCcw, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
+import { noopExcelImportSourceAdapter } from "../import/excelImportAdapter";
 import type {
+  ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
+  ExcelImportSourceResult,
   ExcelImportTarget,
   ExcelImportValidationIssue,
 } from "../types/dashboard";
@@ -29,6 +32,13 @@ const DRAFT_STATUS_LABELS: Record<ExcelImportDraftStatus, string> = {
   error: "오류",
 };
 
+const SOURCE_STATUS_LABELS: Record<ExcelImportAdapterStatus, string> = {
+  idle: "대기",
+  ready: "준비됨",
+  blocked: "차단됨",
+  error: "오류",
+};
+
 function getIssueLabel(issue: ExcelImportValidationIssue) {
   const row = issue.rowIndex ? `${issue.rowIndex}행` : "전체";
   const field = issue.field ? ` · ${issue.field}` : "";
@@ -38,6 +48,8 @@ function getIssueLabel(issue: ExcelImportValidationIssue) {
 
 export function ExcelImportSettings() {
   const [draft, setDraft] = useState(() => createEmptyImportDraft());
+  const [sourceResult, setSourceResult] =
+    useState<ExcelImportSourceResult | null>(null);
   const [notice, setNotice] = useState(
     "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
   );
@@ -57,18 +69,27 @@ export function ExcelImportSettings() {
 
     return { errorCount, warningCount };
   }, [draft.issues]);
+  const sourceStatus = sourceResult?.status ?? "idle";
+  const sourceIssues = sourceResult?.issues ?? [];
 
   function updateTarget(target: ExcelImportTarget) {
     setDraft(createEmptyImportDraft(target));
+    setSourceResult(null);
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
-  function handleFileButtonClick() {
-    setNotice("다음 단계에서 실제 파일 선택을 구현합니다.");
+  async function handleFileButtonClick() {
+    const result = await noopExcelImportSourceAdapter.selectSource();
+
+    setSourceResult(result);
+    setNotice(
+      "파일 선택 source adapter 경계만 확인했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
+    );
   }
 
   function resetDraft() {
     setDraft(createEmptyImportDraft(draft.target));
+    setSourceResult(null);
     setNotice("현재 대상의 샘플 매핑과 검증 결과를 초기화했습니다.");
   }
 
@@ -117,6 +138,46 @@ export function ExcelImportSettings() {
       <p className="excel-import-settings__notice" aria-live="polite">
         {notice}
       </p>
+
+      <section className="excel-import-source" aria-label="파일 선택 경계">
+        <div className="excel-import-source__header">
+          <div>
+            <h4>파일 선택 경계</h4>
+            <p>
+              나중에 source adapter가 파일 메타데이터를 넘겨줄 위치입니다.
+              현재는 실제 선택 없이 blocked 결과만 표시합니다.
+            </p>
+          </div>
+          <span data-status={sourceStatus}>
+            {SOURCE_STATUS_LABELS[sourceStatus]}
+          </span>
+        </div>
+        <div className="excel-import-source__body">
+          <div>
+            <strong>
+              {sourceResult?.source?.fileName ?? "선택된 파일 없음"}
+            </strong>
+            <small>
+              {sourceResult?.source
+                ? `${sourceResult.source.selectedAt} · ${
+                    sourceResult.source.mimeType ?? "파일 형식 미확인"
+                  }`
+                : "파일 선택 입력과 parser는 다음 단계에서 연결합니다."}
+            </small>
+          </div>
+          {sourceIssues.length > 0 ? (
+            <ul className="excel-source-issue-list">
+              {sourceIssues.map((issue) => (
+                <li key={issue.message} data-level={issue.level}>
+                  {issue.message}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>아직 source adapter 결과가 없습니다.</p>
+          )}
+        </div>
+      </section>
 
       <div className="excel-import-settings__meta">
         <span>{schema.description}</span>
