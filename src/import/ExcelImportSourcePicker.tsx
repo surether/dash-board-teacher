@@ -1,4 +1,5 @@
 import { Upload } from "lucide-react";
+import { useRef } from "react";
 import { noopExcelImportSourceAdapter } from "./excelImportAdapter";
 import type { ExcelImportSourceResult } from "../types/dashboard";
 
@@ -15,9 +16,14 @@ export function ExcelImportSourcePicker({
   onResult,
   onError,
 }: ExcelImportSourcePickerProps) {
-  async function handleSourceRequest() {
-    onRequest();
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
+  function handleSourceRequest() {
+    onRequest();
+    inputRef.current?.click();
+  }
+
+  async function handleSourceBoundaryChange() {
     try {
       const result = await noopExcelImportSourceAdapter.selectSource();
       onResult(result);
@@ -27,9 +33,18 @@ export function ExcelImportSourcePicker({
   }
 
   return (
-    <button type="button" disabled={disabled} onClick={handleSourceRequest}>
-      <Upload size={15} />
-      경계 확인
-    </button>
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        hidden
+        tabIndex={-1}
+        onChange={handleSourceBoundaryChange}
+      />
+      <button type="button" disabled={disabled} onClick={handleSourceRequest}>
+        <Upload size={15} />
+        경계 확인
+      </button>
+    </>
   );
 }
