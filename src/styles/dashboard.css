@@ -1079,6 +1079,10 @@ button {
   color: var(--apple-accent-orange);
 }
 
+.excel-import-source__header span[data-status="requested"] {
+  color: var(--apple-accent-blue);
+}
+
 .excel-import-source__header span[data-status="error"],
 .excel-source-issue-list li[data-level="error"] {
   color: var(--apple-danger);

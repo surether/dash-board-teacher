@@ -32,11 +32,22 @@ const DRAFT_STATUS_LABELS: Record<ExcelImportDraftStatus, string> = {
   error: "오류",
 };
 
-const SOURCE_STATUS_LABELS: Record<ExcelImportAdapterStatus, string> = {
+type SourceBoundaryStatus = "requested" | ExcelImportAdapterStatus;
+
+const SOURCE_STATUS_LABELS: Record<SourceBoundaryStatus, string> = {
   idle: "대기",
+  requested: "요청 중",
   ready: "준비됨",
   blocked: "차단됨",
   error: "오류",
+};
+
+const SOURCE_STATUS_MESSAGES: Record<SourceBoundaryStatus, string> = {
+  idle: "source adapter 요청 전입니다. 실제 파일 선택 입력은 아직 연결하지 않았습니다.",
+  requested: "source adapter 경계를 확인하는 중입니다.",
+  ready: "source adapter가 파일 메타데이터를 반환할 준비가 된 상태입니다.",
+  blocked: "현재 단계에서는 noop adapter가 실제 파일 선택을 차단합니다.",
+  error: "source adapter 요청 중 오류가 발생했습니다.",
 };
 
 function getIssueLabel(issue: ExcelImportValidationIssue) {
@@ -48,6 +59,8 @@ function getIssueLabel(issue: ExcelImportValidationIssue) {
 
 export function ExcelImportSettings() {
   const [draft, setDraft] = useState(() => createEmptyImportDraft());
+  const [sourceStatus, setSourceStatus] =
+    useState<SourceBoundaryStatus>("idle");
   const [sourceResult, setSourceResult] =
     useState<ExcelImportSourceResult | null>(null);
   const [notice, setNotice] = useState(
@@ -69,26 +82,47 @@ export function ExcelImportSettings() {
 
     return { errorCount, warningCount };
   }, [draft.issues]);
-  const sourceStatus = sourceResult?.status ?? "idle";
   const sourceIssues = sourceResult?.issues ?? [];
 
   function updateTarget(target: ExcelImportTarget) {
     setDraft(createEmptyImportDraft(target));
+    setSourceStatus("idle");
     setSourceResult(null);
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
   async function handleFileButtonClick() {
-    const result = await noopExcelImportSourceAdapter.selectSource();
+    setSourceStatus("requested");
+    setSourceResult(null);
+    setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
 
-    setSourceResult(result);
-    setNotice(
-      "파일 선택 source adapter 경계만 확인했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
-    );
+    try {
+      const result = await noopExcelImportSourceAdapter.selectSource();
+
+      setSourceStatus(result.status);
+      setSourceResult(result);
+      setNotice(
+        "noop source adapter의 blocked 결과를 확인했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
+      );
+    } catch {
+      setSourceStatus("error");
+      setSourceResult({
+        status: "error",
+        source: null,
+        issues: [
+          {
+            level: "error",
+            message: "source adapter 요청 중 오류가 발생했습니다.",
+          },
+        ],
+      });
+      setNotice("source adapter 요청 중 오류가 발생했습니다.");
+    }
   }
 
   function resetDraft() {
     setDraft(createEmptyImportDraft(draft.target));
+    setSourceStatus("idle");
     setSourceResult(null);
     setNotice("현재 대상의 샘플 매핑과 검증 결과를 초기화했습니다.");
   }
@@ -124,7 +158,7 @@ export function ExcelImportSettings() {
         </label>
         <button type="button" onClick={handleFileButtonClick}>
           <Upload size={15} />
-          파일 선택
+          경계 확인
         </button>
         <button type="button" className="is-secondary" onClick={resetDraft}>
           <RotateCcw size={15} />
@@ -162,7 +196,7 @@ export function ExcelImportSettings() {
                 ? `${sourceResult.source.selectedAt} · ${
                     sourceResult.source.mimeType ?? "파일 형식 미확인"
                   }`
-                : "파일 선택 입력과 parser는 다음 단계에서 연결합니다."}
+                : SOURCE_STATUS_MESSAGES[sourceStatus]}
             </small>
           </div>
           {sourceIssues.length > 0 ? (
