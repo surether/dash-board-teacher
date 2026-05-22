@@ -1,6 +1,6 @@
-import { RotateCcw, Upload } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
-import { noopExcelImportSourceAdapter } from "../import/excelImportAdapter";
+import { ExcelImportSourcePicker } from "../import/ExcelImportSourcePicker";
 import type {
   ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
@@ -91,33 +91,33 @@ export function ExcelImportSettings() {
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
-  async function handleFileButtonClick() {
+  function handleSourceRequest() {
     setSourceStatus("requested");
     setSourceResult(null);
     setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
+  }
 
-    try {
-      const result = await noopExcelImportSourceAdapter.selectSource();
+  function handleSourceResult(result: ExcelImportSourceResult) {
+    setSourceStatus(result.status);
+    setSourceResult(result);
+    setNotice(
+      "source picker가 noop adapter의 blocked 결과를 전달했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
+    );
+  }
 
-      setSourceStatus(result.status);
-      setSourceResult(result);
-      setNotice(
-        "noop source adapter의 blocked 결과를 확인했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
-      );
-    } catch {
-      setSourceStatus("error");
-      setSourceResult({
-        status: "error",
-        source: null,
-        issues: [
-          {
-            level: "error",
-            message: "source adapter 요청 중 오류가 발생했습니다.",
-          },
-        ],
-      });
-      setNotice("source adapter 요청 중 오류가 발생했습니다.");
-    }
+  function handleSourceError(message: string) {
+    setSourceStatus("error");
+    setSourceResult({
+      status: "error",
+      source: null,
+      issues: [
+        {
+          level: "error",
+          message,
+        },
+      ],
+    });
+    setNotice(message);
   }
 
   function resetDraft() {
@@ -156,10 +156,11 @@ export function ExcelImportSettings() {
             ))}
           </select>
         </label>
-        <button type="button" onClick={handleFileButtonClick}>
-          <Upload size={15} />
-          경계 확인
-        </button>
+        <ExcelImportSourcePicker
+          onRequest={handleSourceRequest}
+          onResult={handleSourceResult}
+          onError={handleSourceError}
+        />
         <button type="button" className="is-secondary" onClick={resetDraft}>
           <RotateCcw size={15} />
           초기화
