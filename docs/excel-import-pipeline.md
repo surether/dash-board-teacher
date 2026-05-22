@@ -52,6 +52,15 @@ Not allowed in Phase 3-B:
 - `<input type="file">`
 - direct browser file parsing
 
+Phase 3-E source picker boundary:
+
+- `ExcelImportSettings` must not know about `File`, `FileList`, `FileReader`, or `xlsx`.
+- A future `<input type="file">` must live inside a dedicated source picker such as `ExcelImportSourcePicker`, not directly in `ExcelImportSettings`.
+- The source picker or browser source adapter may own browser-only file details temporarily, but it must emit an `ExcelImportSourceResult` to the settings UI.
+- `ExcelImportSourceMeta` is the only source data that should cross into shared UI state.
+- A `ready` source result means file metadata has been selected. It does not mean workbook parsing, preview generation, validation, or apply is complete.
+- The selected `File` object must not be stored in shared dashboard types, `ExcelImportDraft`, or `ExcelImportSettings` state.
+
 ### Parse
 
 The parse stage will eventually convert a workbook source into sheet-like rows. It should be hidden behind an adapter so the app can replace the parser implementation later.
@@ -155,8 +164,11 @@ Phase 3-B rule:
 
 These direct connections should stay forbidden even after real file parsing begins:
 
+- `ExcelImportSettings` -> `File`
+- `ExcelImportSettings` -> `FileList`
 - UI -> `FileReader`
 - UI -> `xlsx`
+- `ExcelImportSettings` -> `<input type="file">`
 - validation -> `saveStudentRosterState`
 - validation -> timetable storage
 - import plan -> storage direct save
@@ -222,7 +234,9 @@ The following remain forbidden until a later phase explicitly allows them:
 
 - installing `xlsx`
 - implementing `FileReader`
-- adding `<input type="file">`
+- adding `<input type="file">` directly to `ExcelImportSettings`
+- storing `File` objects in shared types or settings state
+- treating source `ready` as parsed workbook readiness
 - connecting Excel import to `saveStudentRosterState`
 - connecting Excel import to `saveLessonToolsState`
 - implementing `fetch`
