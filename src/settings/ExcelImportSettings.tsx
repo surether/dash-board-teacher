@@ -1,10 +1,7 @@
 import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ExcelImportSourcePicker } from "../import/ExcelImportSourcePicker";
-import {
-  createUnsupportedExcelParsedPreviewResult,
-  type ExcelParsedPreviewResult,
-} from "../import/excelParserBoundary";
+import type { CsvParserBoundaryResult } from "../import/csvParserBoundary";
 import type {
   ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
@@ -58,7 +55,7 @@ const SOURCE_STATUS_LABELS: Record<SourceBoundaryStatus, string> = {
 const SOURCE_STATUS_MESSAGES: Record<SourceBoundaryStatus, string> = {
   idle: "source adapter 요청 전입니다. 실제 파일 선택 입력은 아직 연결하지 않았습니다.",
   requested: "source adapter 경계를 확인하는 중입니다.",
-  ready: "파일 메타데이터를 받았습니다. 아직 파일 내용은 읽지 않았습니다.",
+  ready: "파일 메타데이터를 받았습니다. CSV 파일이면 미리보기를 생성합니다.",
   blocked: "현재 단계에서는 noop adapter가 실제 파일 선택을 차단합니다.",
   error: "source adapter 요청 중 오류가 발생했습니다.",
 };
@@ -71,7 +68,7 @@ const FILE_READ_STATUS_LABELS: Record<FileReadSummaryStatus, string> = {
 };
 
 const PARSED_PREVIEW_STATUS_LABELS: Record<
-  ExcelParsedPreviewResult["status"],
+  CsvParserBoundaryResult["status"],
   string
 > = {
   idle: "대기",
@@ -129,7 +126,7 @@ export function ExcelImportSettings() {
   const [fileReadSummary, setFileReadSummary] =
     useState<FileReadSummary | null>(null);
   const [parsedPreviewSummary, setParsedPreviewSummary] =
-    useState<ExcelParsedPreviewResult | null>(null);
+    useState<CsvParserBoundaryResult | null>(null);
   const [notice, setNotice] = useState(
     "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
   );
@@ -159,6 +156,15 @@ export function ExcelImportSettings() {
         `선택 ${formatDateTime(sourceMeta.selectedAt)}`,
       ].join(" · ")
     : SOURCE_STATUS_MESSAGES[sourceStatus];
+  const parsedPreviewColumns = useMemo(() => {
+    const maxColumnCount =
+      parsedPreviewSummary?.previewRows.reduce(
+        (maxCount, row) => Math.max(maxCount, row.values.length),
+        0,
+      ) ?? 0;
+
+    return Array.from({ length: maxColumnCount }, (_, index) => `열 ${index + 1}`);
+  }, [parsedPreviewSummary]);
 
   function updateTarget(target: ExcelImportTarget) {
     setDraft(createEmptyImportDraft(target));
@@ -179,11 +185,11 @@ export function ExcelImportSettings() {
 
   function handleFileReadSummary(summary: FileReadSummary) {
     setFileReadSummary(summary);
-    setParsedPreviewSummary(
-      summary.status === "ready" && summary.hasBuffer
-        ? createUnsupportedExcelParsedPreviewResult(summary.source)
-        : null,
-    );
+    setParsedPreviewSummary(null);
+  }
+
+  function handleCsvPreviewResult(result: CsvParserBoundaryResult) {
+    setParsedPreviewSummary(result);
   }
 
   function handleSourceResult(result: ExcelImportSourceResult) {
@@ -191,7 +197,7 @@ export function ExcelImportSettings() {
     setSourceResult(result);
     setNotice(
       result.status === "ready"
-        ? "파일 메타데이터를 받았습니다. 파싱과 미리보기 생성은 아직 수행하지 않습니다."
+        ? "파일 메타데이터를 받았습니다. CSV 파일이면 아래에서 앞부분 미리보기를 확인할 수 있습니다."
         : "source picker가 noop adapter의 blocked 결과를 전달했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
     );
   }
@@ -255,6 +261,7 @@ export function ExcelImportSettings() {
           onRequest={handleSourceRequest}
           onResult={handleSourceResult}
           onFileReadResult={handleFileReadSummary}
+          onCsvPreviewResult={handleCsvPreviewResult}
           onError={handleSourceError}
         />
         <button type="button" className="is-secondary" onClick={resetDraft}>
@@ -276,7 +283,7 @@ export function ExcelImportSettings() {
             <h4>파일 선택 경계</h4>
             <p>
               나중에 source adapter가 파일 메타데이터를 넘겨줄 위치입니다.
-              현재는 실제 선택 없이 blocked 결과만 표시합니다.
+              현재는 선택한 파일의 메타데이터와 CSV 미리보기 경계를 표시합니다.
             </p>
           </div>
           <span data-status={sourceStatus}>
@@ -308,8 +315,8 @@ export function ExcelImportSettings() {
             <div>
               <h4>파일 읽기 요약</h4>
               <p>
-                선택한 파일을 읽는 경계 결과만 표시합니다. 파일 내용은 아직
-                표시하지 않습니다.
+                선택한 파일을 읽는 경계 결과만 표시합니다. CSV 내용은 아래
+                미리보기에서 제한된 범위로만 표시합니다.
               </p>
             </div>
             <span
@@ -348,16 +355,22 @@ export function ExcelImportSettings() {
       ) : null}
 
       {parsedPreviewSummary ? (
-        <section className="excel-import-source" aria-label="파싱 미지원 요약">
+        <section className="excel-import-source" aria-label="CSV 미리보기 요약">
           <div className="excel-import-source__header">
             <div>
-              <h4>파싱 미지원 요약</h4>
+              <h4>CSV 미리보기</h4>
               <p>
-                파일 읽기는 완료되었지만 실제 파싱과 미리보기 생성은 아직
-                지원하지 않습니다.
+                CSV 파일의 앞부분만 표로 표시합니다. 학생명렬 저장과 매핑은
+                아직 실행하지 않습니다.
               </p>
             </div>
-            <span data-status="blocked">
+            <span
+              data-status={
+                parsedPreviewSummary.status === "unsupported"
+                  ? "blocked"
+                  : parsedPreviewSummary.status
+              }
+            >
               {PARSED_PREVIEW_STATUS_LABELS[parsedPreviewSummary.status]}
             </span>
           </div>
@@ -373,13 +386,47 @@ export function ExcelImportSettings() {
                 {parsedPreviewSummary.issues.length}개
               </small>
             </div>
-            <ul className="excel-source-issue-list">
-              {parsedPreviewSummary.issues.map((issue) => (
-                <li key={issue.message} data-level={issue.level}>
-                  {issue.message}
-                </li>
-              ))}
-            </ul>
+            {parsedPreviewSummary.issues.length > 0 ? (
+              <ul className="excel-source-issue-list">
+                {parsedPreviewSummary.issues.map((issue) => (
+                  <li key={issue.message} data-level={issue.level}>
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {parsedPreviewSummary.previewRows.length > 0 ? (
+              <div className="excel-preview-table-wrap">
+                <table className="excel-preview-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">행</th>
+                      {parsedPreviewColumns.map((column) => (
+                        <th key={column} scope="col">
+                          {column}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedPreviewSummary.previewRows.map((row) => (
+                      <tr key={row.rowIndex}>
+                        <th scope="row">{row.rowIndex}</th>
+                        {parsedPreviewColumns.map((column, columnIndex) => (
+                          <td key={`${row.rowIndex}-${column}`}>
+                            {row.values[columnIndex] || "-"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="excel-import-empty">
+                표시할 CSV 미리보기 데이터가 없습니다.
+              </p>
+            )}
           </div>
         </section>
       ) : null}

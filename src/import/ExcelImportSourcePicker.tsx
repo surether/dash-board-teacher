@@ -1,6 +1,12 @@
 import { Upload } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useRef } from "react";
+import {
+  createCsvParserBoundaryErrorResult,
+  createCsvParserBoundaryResult,
+  createUnsupportedCsvParsedPreviewResult,
+  type CsvParserBoundaryResult,
+} from "./csvParserBoundary";
 import { noopExcelImportSourceAdapter } from "./excelImportAdapter";
 import {
   readBrowserExcelFileAsArrayBuffer,
@@ -20,6 +26,7 @@ interface ExcelImportSourcePickerProps {
   onRequest: () => void;
   onResult: (result: ExcelImportSourceResult) => void;
   onFileReadResult?: (result: ExcelImportFileReadBoundaryState) => void;
+  onCsvPreviewResult?: (result: CsvParserBoundaryResult) => void;
   onError: (message: string) => void;
 }
 
@@ -28,6 +35,7 @@ export function ExcelImportSourcePicker({
   onRequest,
   onResult,
   onFileReadResult,
+  onCsvPreviewResult,
   onError,
 }: ExcelImportSourcePickerProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -50,7 +58,8 @@ export function ExcelImportSourcePicker({
   async function handleSourceBoundaryChange(
     event: ChangeEvent<HTMLInputElement>,
   ) {
-    const selectedFile = event.currentTarget.files?.item(0);
+    const inputElement = event.currentTarget;
+    const selectedFile = inputElement.files?.item(0);
 
     if (!selectedFile) {
       await emitBlockedResult();
@@ -74,7 +83,7 @@ export function ExcelImportSourcePicker({
       );
     } catch {
       onError("파일 읽기 경계에서 오류가 발생했습니다.");
-      event.currentTarget.value = "";
+      inputElement.value = "";
       return;
     }
 
@@ -84,6 +93,29 @@ export function ExcelImportSourcePicker({
       hasBuffer: fileReadResult.buffer !== null,
       issues: fileReadResult.issues,
     });
+    if (fileReadResult.status === "ready" && fileReadResult.buffer !== null) {
+      if (isCsvFile(selectedFile)) {
+        try {
+          const csvText = await selectedFile.text();
+
+          onCsvPreviewResult?.(
+            createCsvParserBoundaryResult({
+              source,
+              text: csvText,
+            }),
+          );
+        } catch {
+          onCsvPreviewResult?.(
+            createCsvParserBoundaryErrorResult(
+              source,
+              "CSV 텍스트를 읽는 중 오류가 발생했습니다.",
+            ),
+          );
+        }
+      } else {
+        onCsvPreviewResult?.(createUnsupportedCsvParsedPreviewResult(source));
+      }
+    }
     onResult({
       status:
         fileReadResult.status === "cancelled" ? "blocked" : fileReadResult.status,
@@ -91,7 +123,7 @@ export function ExcelImportSourcePicker({
       issues: fileReadResult.issues,
     });
 
-    event.currentTarget.value = "";
+    inputElement.value = "";
   }
 
   return (
@@ -99,6 +131,7 @@ export function ExcelImportSourcePicker({
       <input
         ref={inputRef}
         type="file"
+        accept=".csv,text/csv,.xlsx,.xls"
         hidden
         tabIndex={-1}
         onChange={handleSourceBoundaryChange}
@@ -109,4 +142,11 @@ export function ExcelImportSourcePicker({
       </button>
     </>
   );
+}
+
+function isCsvFile(file: File) {
+  const fileName = file.name.toLowerCase();
+  const mimeType = file.type.toLowerCase();
+
+  return fileName.endsWith(".csv") || mimeType === "text/csv";
 }
