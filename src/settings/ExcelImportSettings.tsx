@@ -34,6 +34,15 @@ const DRAFT_STATUS_LABELS: Record<ExcelImportDraftStatus, string> = {
 
 type SourceBoundaryStatus = "requested" | ExcelImportAdapterStatus;
 
+type FileReadSummaryStatus = "ready" | "blocked" | "error" | "cancelled";
+
+type FileReadSummary = {
+  status: FileReadSummaryStatus;
+  source: ExcelImportSourceResult["source"];
+  hasBuffer: boolean;
+  issues: ExcelImportValidationIssue[];
+};
+
 const SOURCE_STATUS_LABELS: Record<SourceBoundaryStatus, string> = {
   idle: "대기",
   requested: "요청 중",
@@ -48,6 +57,13 @@ const SOURCE_STATUS_MESSAGES: Record<SourceBoundaryStatus, string> = {
   ready: "파일 메타데이터를 받았습니다. 아직 파일 내용은 읽지 않았습니다.",
   blocked: "현재 단계에서는 noop adapter가 실제 파일 선택을 차단합니다.",
   error: "source adapter 요청 중 오류가 발생했습니다.",
+};
+
+const FILE_READ_STATUS_LABELS: Record<FileReadSummaryStatus, string> = {
+  ready: "읽기 준비 완료",
+  blocked: "읽기 차단",
+  error: "읽기 실패",
+  cancelled: "선택 취소",
 };
 
 function formatFileSize(size: number | undefined) {
@@ -96,6 +112,8 @@ export function ExcelImportSettings() {
     useState<SourceBoundaryStatus>("idle");
   const [sourceResult, setSourceResult] =
     useState<ExcelImportSourceResult | null>(null);
+  const [fileReadSummary, setFileReadSummary] =
+    useState<FileReadSummary | null>(null);
   const [notice, setNotice] = useState(
     "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
   );
@@ -130,13 +148,19 @@ export function ExcelImportSettings() {
     setDraft(createEmptyImportDraft(target));
     setSourceStatus("idle");
     setSourceResult(null);
+    setFileReadSummary(null);
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
   function handleSourceRequest() {
     setSourceStatus("requested");
     setSourceResult(null);
+    setFileReadSummary(null);
     setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
+  }
+
+  function handleFileReadSummary(summary: FileReadSummary) {
+    setFileReadSummary(summary);
   }
 
   function handleSourceResult(result: ExcelImportSourceResult) {
@@ -161,6 +185,7 @@ export function ExcelImportSettings() {
         },
       ],
     });
+    setFileReadSummary(null);
     setNotice(message);
   }
 
@@ -168,6 +193,7 @@ export function ExcelImportSettings() {
     setDraft(createEmptyImportDraft(draft.target));
     setSourceStatus("idle");
     setSourceResult(null);
+    setFileReadSummary(null);
     setNotice("현재 대상의 샘플 매핑과 검증 결과를 초기화했습니다.");
   }
 
@@ -203,6 +229,7 @@ export function ExcelImportSettings() {
         <ExcelImportSourcePicker
           onRequest={handleSourceRequest}
           onResult={handleSourceResult}
+          onFileReadResult={handleFileReadSummary}
           onError={handleSourceError}
         />
         <button type="button" className="is-secondary" onClick={resetDraft}>
@@ -249,6 +276,51 @@ export function ExcelImportSettings() {
           )}
         </div>
       </section>
+
+      {fileReadSummary ? (
+        <section className="excel-import-source" aria-label="파일 읽기 요약">
+          <div className="excel-import-source__header">
+            <div>
+              <h4>파일 읽기 요약</h4>
+              <p>
+                선택한 파일을 읽는 경계 결과만 표시합니다. 파일 내용은 아직
+                표시하지 않습니다.
+              </p>
+            </div>
+            <span
+              data-status={
+                fileReadSummary.status === "cancelled"
+                  ? "blocked"
+                  : fileReadSummary.status
+              }
+            >
+              {FILE_READ_STATUS_LABELS[fileReadSummary.status]}
+            </span>
+          </div>
+          <div className="excel-import-source__body">
+            <div>
+              <strong>
+                {fileReadSummary.source?.fileName ?? "선택된 파일 없음"}
+              </strong>
+              <small>
+                바이트 준비 {fileReadSummary.hasBuffer ? "예" : "아니오"} ·
+                이슈 {fileReadSummary.issues.length}개
+              </small>
+            </div>
+            {fileReadSummary.issues.length > 0 ? (
+              <ul className="excel-source-issue-list">
+                {fileReadSummary.issues.map((issue) => (
+                  <li key={issue.message} data-level={issue.level}>
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>파일 읽기 경계에서 보고된 이슈가 없습니다.</p>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <div className="excel-import-settings__meta">
         <span>{schema.description}</span>
