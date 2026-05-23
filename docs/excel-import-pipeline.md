@@ -317,6 +317,72 @@ CSV/template strategy does not relax the existing gates:
 - `ExcelImportSettings` must not call File APIs or parser APIs directly.
 - Source results and parser results must stay separate.
 
+## 5.6 Phase 3-J-G Roster CSV Template Schema Candidate
+
+Phase 3-J-G reviews the student roster CSV/template schema without implementing a parser, alias mapper, validation code, import plan, or storage apply.
+
+Recommended first schema:
+
+```text
+className
+studentNumber
+studentName
+```
+
+Why `className` first:
+
+- Teachers can understand and fill `className` more easily than an internal `classId`.
+- The current settings UI already exposes human-readable class display names.
+- `classId` is an internal identifier and should not be required in a teacher-facing template.
+- A later import flow can resolve `className` to an existing class before building an import plan.
+
+Column name candidates:
+
+| Field | Korean aliases | English aliases |
+| --- | --- | --- |
+| `className` | `반`, `학급` | `className` |
+| `studentNumber` | `번호` | `studentNumber` |
+| `studentName` | `이름`, `성명` | `studentName` |
+
+Do not implement alias mapping in this phase. These are documentation-only candidates.
+
+`studentNumber` principles:
+
+- Numeric values and numeric strings may be accepted in a future parser.
+- The future mapper should normalize values for display and sorting.
+- Empty values should be validation error candidates.
+- Duplicate numbers should be validation error candidates within the same resolved class.
+
+`studentName` principles:
+
+- Leading and trailing whitespace should be trimmed in a future mapper.
+- Empty names should be validation error candidates.
+- Whether to normalize or preserve internal spaces should be reviewed later.
+
+Optional status fields remain deferred for the first implementation:
+
+```text
+absent
+late
+earlyLeave
+officialAbsent
+```
+
+Reasoning:
+
+- Attendance is date-based in the dashboard data model.
+- Roster import and attendance import should not be merged into the first parser flow.
+- The first implementation should focus on stable roster identity fields.
+
+Validation rule candidates only:
+
+- Required columns exist.
+- Required cells are not empty after trim.
+- Student numbers are unique within the resolved class.
+- Student names are not empty.
+- Unknown columns are ignored with a warning or shown as unmapped.
+- Header row is limited to row 1 until a later phase explicitly allows flexible headers.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
@@ -410,7 +476,6 @@ The following remain forbidden until a later phase explicitly allows them:
 
 The next phase should still avoid real `xlsx` workbook parsing. Reasonable next steps are:
 
-- Phase 3-J-G: review the CSV/template schema candidates without parser code.
 - Phase 3-J-H: verify the blocked/noop runtime boundary for future file reading.
 - Phase 3-K-A: review the smallest possible FileReader boundary implementation.
 
