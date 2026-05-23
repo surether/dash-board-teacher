@@ -455,6 +455,101 @@ Validation separation rules:
 - Parser results and validation results must stay separate.
 - `ExcelImportSettings` must not call parser or validation logic directly.
 
+## 5.8 Phase 3-K-G-A CSV Parser Contract Candidate
+
+Phase 3-K-G-A defines the CSV parser contract before installing a parser package or reading real CSV rows. It does not implement CSV parsing, Excel parsing, row preview, validation, alias mapping, import plans, UI changes, or storage writes.
+
+The pipeline order remains:
+
+```text
+FileReader boundary
+-> parser boundary
+-> parsed preview summary
+-> row preview
+-> validation
+-> alias mapping
+-> import plan
+-> storage apply
+```
+
+Responsibility split:
+
+- FileReader boundary: owns browser `File` access and byte acquisition only.
+- Parser boundary: owns conversion from an already-approved parser input into parser-level summary or later row preview data.
+- Parsed preview summary: may report `status`, `source`, `rowCount`, `columnCount`, and `issues` only.
+- Row preview: opens later and may expose bounded display rows only after the parser contract is reviewed again.
+- Validation: runs after row preview exists and must stay outside the parser boundary.
+- Alias mapping: runs after parser output exists and must stay outside the parser boundary.
+- Import plan: may be created only after preview, validation, and mapping are explicit.
+- Storage apply: may happen only after an explicit user action in a later phase.
+
+CSV parser boundary decisions:
+
+1. CSV parser boundary vs FileReader boundary
+   - FileReader remains responsible for browser file access.
+   - CSV parser code must not create `FileReader` or call `readAs...` APIs.
+   - A future CSV parser may receive text produced by a dedicated file-read/decoding phase, but that decoding phase is not open yet.
+
+2. Parser input shape
+   - The parser should not receive `File`, `FileList`, React events, or UI state.
+   - The current `ExcelParsedPreviewResult` is sufficient for the first summary result contract.
+   - If a later phase opens CSV text decoding, it should define a narrow parser input such as source metadata plus decoded text. That type must be reviewed before implementation.
+   - The first CSV parser phase should not pass `ArrayBuffer` through React state or settings callbacks.
+
+3. Encoding boundary
+   - Encoding detection and text decoding are their own phase.
+   - `TextDecoder`, `readAsText`, BOM handling, and EUC-KR/CP949 policy are not part of Phase 3-K-G-A.
+   - The first implementation should prefer a well-reviewed package or explicit decoding rule instead of ad hoc string handling.
+
+4. Minimum parser result
+   - The first parser result should stay at parsed preview summary level:
+     - `status`
+     - `source`
+     - `rowCount`
+     - `columnCount`
+     - `issues`
+   - It must not include raw rows, cells, header names, student names, or mapped domain data.
+
+5. Row preview gate
+   - Row preview is not opened in this phase because it exposes actual file contents.
+   - It needs separate limits for maximum displayed rows, sensitive data handling, and error recovery.
+   - Opening row preview before parser summary would make validation and alias mapping harder to review independently.
+
+6. Validation and alias mapping gate
+   - Parser boundary should answer "what did the file contain structurally?"
+   - Validation should answer "is the content acceptable for this import target?"
+   - Alias mapping should answer "which source columns map to target fields?"
+   - Keeping them separate prevents parser code from silently becoming import logic.
+
+7. Package installation gate
+   - Package installation is deferred so bundle size, browser compatibility, license, and parsing behavior can be reviewed separately.
+   - Papa Parse remains the likely CSV-first candidate, but Phase 3-K-G-A does not install or import it.
+   - `xlsx`, `read-excel-file`, and `exceljs` stay deferred for a later XLSX review.
+
+If Papa Parse is introduced later, the first implementation target should be:
+
+```text
+decoded CSV text
+-> parser boundary
+-> rowCount / columnCount summary
+-> unsupported or summary-only UI
+```
+
+It should not include header inference, validation, alias mapping, import plans, storage writes, or full row preview.
+
+XLSX support should be reconsidered after the CSV-first parser boundary has proven:
+
+- source/file-read state stays out of settings internals
+- parser result and validation result stay separate
+- row preview can be bounded and reviewed
+- import plan generation remains blocked until validation exists
+
+Next phase candidates:
+
+- Phase 3-K-G-B: CSV parser package installation preflight review.
+- Phase 3-K-G-C: Papa Parse installation and CSV `rowCount`/`columnCount` preview summary only.
+- Phase 3-K-G-D: CSV row preview contract review without validation or import apply.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
