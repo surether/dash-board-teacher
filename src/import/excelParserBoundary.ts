@@ -30,6 +30,42 @@ export type BrowserExcelFileReadResult =
       issues: ExcelImportValidationIssue[];
     };
 
+export type ExcelParsedPreviewStatus =
+  | "idle"
+  | "ready"
+  | "error"
+  | "unsupported";
+
+export type ExcelParsedPreviewIssue = {
+  level: "info" | "warning" | "error";
+  message: string;
+};
+
+export type ExcelParsedPreviewResult = {
+  status: ExcelParsedPreviewStatus;
+  source: ExcelImportSourceMeta | null;
+  rowCount: number | null;
+  columnCount: number | null;
+  issues: ExcelParsedPreviewIssue[];
+};
+
+export function createUnsupportedExcelParsedPreviewResult(
+  source: ExcelImportSourceMeta | null,
+): ExcelParsedPreviewResult {
+  return {
+    status: "unsupported",
+    source,
+    rowCount: null,
+    columnCount: null,
+    issues: [
+      {
+        level: "info",
+        message: "Excel parsing is not implemented yet.",
+      },
+    ],
+  };
+}
+
 function createFileReadIssue(
   level: ExcelImportValidationIssue["level"],
   message: string,
