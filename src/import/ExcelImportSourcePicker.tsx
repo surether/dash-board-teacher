@@ -2,12 +2,24 @@ import { Upload } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useRef } from "react";
 import { noopExcelImportSourceAdapter } from "./excelImportAdapter";
+import {
+  readBrowserExcelFileAsArrayBuffer,
+  type BrowserExcelFileReadResult,
+} from "./excelParserBoundary";
 import type { ExcelImportSourceResult } from "../types/dashboard";
+
+type ExcelImportFileReadBoundaryState = {
+  status: BrowserExcelFileReadResult["status"];
+  source: BrowserExcelFileReadResult["source"];
+  hasBuffer: boolean;
+  issues: BrowserExcelFileReadResult["issues"];
+};
 
 interface ExcelImportSourcePickerProps {
   disabled?: boolean;
   onRequest: () => void;
   onResult: (result: ExcelImportSourceResult) => void;
+  onFileReadResult?: (result: ExcelImportFileReadBoundaryState) => void;
   onError: (message: string) => void;
 }
 
@@ -15,6 +27,7 @@ export function ExcelImportSourcePicker({
   disabled = false,
   onRequest,
   onResult,
+  onFileReadResult,
   onError,
 }: ExcelImportSourcePickerProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -44,17 +57,38 @@ export function ExcelImportSourcePicker({
       return;
     }
 
+    const source = {
+      id: `${selectedFile.name}-${selectedFile.size}-${selectedFile.lastModified}`,
+      fileName: selectedFile.name,
+      selectedAt: new Date().toISOString(),
+      size: selectedFile.size,
+      mimeType: selectedFile.type,
+      lastModified: selectedFile.lastModified,
+    };
+    let fileReadResult: BrowserExcelFileReadResult;
+
+    try {
+      fileReadResult = await readBrowserExcelFileAsArrayBuffer(
+        selectedFile,
+        source,
+      );
+    } catch {
+      onError("파일 읽기 경계에서 오류가 발생했습니다.");
+      event.currentTarget.value = "";
+      return;
+    }
+
+    onFileReadResult?.({
+      status: fileReadResult.status,
+      source: fileReadResult.source,
+      hasBuffer: fileReadResult.buffer !== null,
+      issues: fileReadResult.issues,
+    });
     onResult({
-      status: "ready",
-      source: {
-        id: `${selectedFile.name}-${selectedFile.size}-${selectedFile.lastModified}`,
-        fileName: selectedFile.name,
-        selectedAt: new Date().toISOString(),
-        size: selectedFile.size,
-        mimeType: selectedFile.type,
-        lastModified: selectedFile.lastModified,
-      },
-      issues: [],
+      status:
+        fileReadResult.status === "cancelled" ? "blocked" : fileReadResult.status,
+      source: fileReadResult.source,
+      issues: fileReadResult.issues,
     });
 
     event.currentTarget.value = "";
