@@ -383,6 +383,78 @@ Validation rule candidates only:
 - Unknown columns are ignored with a warning or shown as unmapped.
 - Header row is limited to row 1 until a later phase explicitly allows flexible headers.
 
+## 5.7 Phase 3-J-H Roster CSV Validation Rule Candidates
+
+Phase 3-J-H breaks the roster CSV/template validation rules into reviewable candidates. It does not implement validation code, parser code, alias mapping, import plans, or storage apply.
+
+Required column candidates:
+
+```text
+className
+studentNumber
+studentName
+```
+
+Header alias candidates stay documentation-only:
+
+| Field | Korean aliases | English aliases |
+| --- | --- | --- |
+| `className` | `반`, `학급` | `className` |
+| `studentNumber` | `번호` | `studentNumber` |
+| `studentName` | `이름`, `성명` | `studentName` |
+
+Required cell candidates:
+
+- Empty `className` should be a validation error candidate.
+- Empty `studentNumber` should be a validation error candidate.
+- Empty `studentName` should be a validation error candidate.
+
+`studentNumber` validation candidates:
+
+- Numeric values and numeric strings may be accepted.
+- Values should be trimmed before future normalization.
+- Sorting should use numeric order after normalization.
+- Duplicate numbers inside the same `className` should be validation error candidates.
+- Leading zero policy, such as `01`, is deferred because it can affect display and sorting expectations.
+
+`studentName` validation candidates:
+
+- Leading and trailing whitespace should be trimmed.
+- Empty values after trim should be validation error candidates.
+- Internal spaces should be preserved in the first implementation candidate.
+- Special character restrictions should stay permissive at first to avoid rejecting real names too aggressively.
+
+Header row policy candidates:
+
+- Header row should be limited to row 1 in the first implementation candidate.
+- Automatic header detection should be deferred.
+- Header aliases should remain a documented candidate until an alias mapper phase explicitly opens.
+
+Unknown column policy candidates:
+
+- Unknown columns may be ignored with a warning or displayed as unmapped.
+- Missing required columns should be validation error candidates.
+- Optional status fields such as `absent`, `late`, `earlyLeave`, and `officialAbsent` should be ignored or warned in the first roster-only flow.
+
+Error message structure candidate:
+
+```text
+level: error | warning
+rowNumber?: number
+columnName?: string
+message: string
+```
+
+Do not add this as a TypeScript type in Phase 3-J-H.
+
+Validation separation rules:
+
+- Documenting validation rules does not mean validation code exists.
+- `StudentRosterImportPlan` must not be created before validation.
+- Apply must not be considered before preview rows exist.
+- Parser results and validation results must stay separate.
+- `ExcelImportSettings` must not call parser or validation logic directly.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
@@ -476,7 +548,7 @@ The following remain forbidden until a later phase explicitly allows them:
 
 The next phase should still avoid real `xlsx` workbook parsing. Reasonable next steps are:
 
-- Phase 3-J-H: verify the blocked/noop runtime boundary for future file reading.
+- Phase 3-J-I: verify the blocked/noop runtime boundary for future file reading.
 - Phase 3-K-A: review the smallest possible FileReader boundary implementation.
 
 Still forbidden in these next candidates unless explicitly opened:
