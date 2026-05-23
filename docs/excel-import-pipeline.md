@@ -269,6 +269,54 @@ The separation should remain:
 
 The browser boundary should eventually own `File` and byte acquisition. `ExcelImportSettings` and `ExcelImportSourcePicker` should still avoid parser execution.
 
+## 5.5 Phase 3-J-F CSV/Template-First Roster Strategy
+
+Phase 3-J-F chooses a first import strategy for student rosters:
+
+```text
+CSV or strict template first.
+.xlsx full workbook parsing stays deferred for a separate later review.
+```
+
+This is a strategy decision only. It does not implement file reading, CSV parsing, workbook parsing, preview generation, validation code, import plans, or storage writes.
+
+Reasons:
+
+- Student rosters contain personal information, so browser-client processing should remain the default and server upload should stay out of scope.
+- Full `.xlsx` workbook parsing has larger bundle, security, browser memory, and type-safety risks than a narrow CSV/template flow.
+- Student roster rows are structurally simple, so a strict template is easier to validate, explain, and recover from when a teacher uploads the wrong shape.
+- `.xlsx` support may still be necessary for school compatibility, but it is too broad for the first real parser phase.
+
+Minimum field candidates for a future roster template:
+
+- `className` or `classId`
+- `studentNumber`
+- `studentName`
+- Optional status fields for later review: `absent`, `late`, `earlyLeave`, `officialAbsent`
+
+Do not create runtime types or validation code for those fields in this phase.
+
+The stage order remains:
+
+```text
+source metadata
+-> file read boundary
+-> parser input
+-> raw rows
+-> preview rows
+-> validation
+-> StudentRosterImportPlan dry-run
+-> explicit apply
+-> storage persistence
+```
+
+CSV/template strategy does not relax the existing gates:
+
+- Validation must run before an import plan exists.
+- Preview rows must exist before apply can be considered.
+- `ExcelImportSettings` must not call File APIs or parser APIs directly.
+- Source results and parser results must stay separate.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
@@ -362,14 +410,16 @@ The following remain forbidden until a later phase explicitly allows them:
 
 The next phase should still avoid real `xlsx` workbook parsing. Reasonable next steps are:
 
-- Phase 3-J-D: review `xlsx` package impact, including bundle size, security posture, file format coverage, and typing gaps.
-- Phase 3-J-F: document the CSV/template-first strategy before choosing a parser package.
-- Phase 3-J-G: verify the blocked/noop runtime boundary for future file reading.
+- Phase 3-J-G: review the CSV/template schema candidates without parser code.
+- Phase 3-J-H: verify the blocked/noop runtime boundary for future file reading.
+- Phase 3-K-A: review the smallest possible FileReader boundary implementation.
 
 Still forbidden in these next candidates unless explicitly opened:
 
 - installing `xlsx`
+- installing a CSV parser
 - importing `XLSX`
+- parsing CSV files
 - parsing workbooks or worksheets
 - generating preview rows from a real file
 - creating `StudentRosterImportPlan`
