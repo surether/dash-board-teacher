@@ -19,6 +19,8 @@ const parserBoundaryBlockedResult = {
 // A future implementation may own browser-only binary acquisition here, but
 // this boundary must stay blocked until a phase explicitly opens file reading.
 // It must return parser results only, not preview rows, import plans, or writes.
+// Future flow: selected File stays here -> bytes are acquired -> parser input
+// is formed -> parser adapter runs outside React settings components.
 export interface BrowserExcelParserBoundary {
   parseSelectedSource(): Promise<ExcelWorkbookParseResult>;
 }

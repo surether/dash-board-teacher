@@ -236,6 +236,39 @@ The intended future flow is:
 4. A still later parser phase may convert the binary payload into workbook/raw sheet data.
 5. Preview, validation, import plan, and apply remain downstream phases.
 
+## 5.4 Phase 3-J-E Parser Input Contract
+
+Phase 3-J-E defines the future parser input shape without creating bytes or running a parser.
+
+The current parser adapter contract is metadata-only:
+
+```ts
+parseSource(source: ExcelImportSourceMeta): Promise<ExcelWorkbookParseResult>
+```
+
+That is not enough for real file parsing because metadata cannot contain workbook bytes. A future parser implementation should receive an input shape like:
+
+```ts
+type ExcelWorkbookParseInput = {
+  source: ExcelImportSourceMeta;
+  buffer: ArrayBuffer;
+};
+```
+
+This contract is only a boundary candidate in Phase 3-J-E. The app must not create an `ArrayBuffer` yet.
+
+The separation should remain:
+
+- `ExcelImportSourceResult`: source metadata and source-level issues only.
+- `ExcelWorkbookParseInput`: future parser input after browser-only byte acquisition.
+- `ExcelWorkbookParseResult`: parser output with workbook/raw sheet data or parser issues.
+- Preview rows: created by a mapper/preview layer after parsing.
+- Validation: runs after preview row generation.
+- `StudentRosterImportPlan`: dry-run output after validation.
+- Storage apply: explicit user action after a valid plan.
+
+The browser boundary should eventually own `File` and byte acquisition. `ExcelImportSettings` and `ExcelImportSourcePicker` should still avoid parser execution.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
@@ -330,7 +363,8 @@ The following remain forbidden until a later phase explicitly allows them:
 The next phase should still avoid real `xlsx` workbook parsing. Reasonable next steps are:
 
 - Phase 3-J-D: review `xlsx` package impact, including bundle size, security posture, file format coverage, and typing gaps.
-- Phase 3-J-E: design the parser adapter input contract, such as whether it receives `ArrayBuffer`, normalized workbook-like data, or another browser-boundary output.
+- Phase 3-J-F: document the CSV/template-first strategy before choosing a parser package.
+- Phase 3-J-G: verify the blocked/noop runtime boundary for future file reading.
 
 Still forbidden in these next candidates unless explicitly opened:
 
