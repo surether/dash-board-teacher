@@ -17,6 +17,12 @@ export type CsvParserBoundaryLibraryTypes = {
   error: ParseError;
 };
 
+export function createCsvParserBoundaryResult(
+  input: CsvParserBoundaryInput,
+): CsvParserBoundaryResult {
+  return createUnsupportedCsvParsedPreviewResult(input.source);
+}
+
 export function createUnsupportedCsvParsedPreviewResult(
   source: CsvParserBoundaryInput["source"],
 ): CsvParserBoundaryResult {
