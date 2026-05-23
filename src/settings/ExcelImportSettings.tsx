@@ -2,6 +2,7 @@ import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ExcelImportSourcePicker } from "../import/ExcelImportSourcePicker";
 import type { CsvParserBoundaryResult } from "../import/csvParserBoundary";
+import { createStudentRosterCandidateResult } from "../import/studentRosterCandidateBoundary";
 import type {
   ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
@@ -165,6 +166,10 @@ export function ExcelImportSettings() {
 
     return Array.from({ length: maxColumnCount }, (_, index) => `열 ${index + 1}`);
   }, [parsedPreviewSummary]);
+  const studentRosterCandidateResult = useMemo(
+    () => createStudentRosterCandidateResult(parsedPreviewSummary),
+    [parsedPreviewSummary],
+  );
 
   function updateTarget(target: ExcelImportTarget) {
     setDraft(createEmptyImportDraft(target));
@@ -425,6 +430,94 @@ export function ExcelImportSettings() {
             ) : (
               <p className="excel-import-empty">
                 표시할 CSV 미리보기 데이터가 없습니다.
+              </p>
+            )}
+          </div>
+        </section>
+      ) : null}
+
+      {studentRosterCandidateResult ? (
+        <section
+          className="excel-import-source"
+          aria-label="학생 후보 미리보기"
+        >
+          <div className="excel-import-source__header">
+            <div>
+              <h4>학생 후보 미리보기</h4>
+              <p>
+                학년, 반, 번호, 성명, 비고 헤더를 기준으로 학생 후보만
+                해석합니다. 저장과 학생명렬 반영은 아직 실행하지 않습니다.
+              </p>
+            </div>
+            <span
+              data-status={
+                studentRosterCandidateResult.status === "unsupported"
+                  ? "blocked"
+                  : studentRosterCandidateResult.status
+              }
+            >
+              {studentRosterCandidateResult.status === "ready"
+                ? "인식됨"
+                : studentRosterCandidateResult.status === "error"
+                  ? "확인 필요"
+                  : "미지원"}
+            </span>
+          </div>
+          <div className="excel-import-source__body">
+            <div>
+              <strong>학생 후보 요약</strong>
+              <small>
+                전체 데이터 행 수{" "}
+                {studentRosterCandidateResult.summary.totalDataRowCount} · 인식
+                학생 수{" "}
+                {studentRosterCandidateResult.summary.recognizedStudentCount} ·
+                누락/오류 행 수{" "}
+                {studentRosterCandidateResult.summary.issueRowCount}
+              </small>
+            </div>
+            {studentRosterCandidateResult.issues.length > 0 ? (
+              <ul className="excel-source-issue-list">
+                {studentRosterCandidateResult.issues.map((issue) => (
+                  <li
+                    key={`${issue.rowIndex ?? "header"}-${issue.message}`}
+                    data-level={issue.level}
+                  >
+                    {issue.rowIndex ? `${issue.rowIndex}행: ` : ""}
+                    {issue.message}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {studentRosterCandidateResult.previewCandidates.length > 0 ? (
+              <div className="excel-preview-table-wrap">
+                <table className="excel-preview-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">학년</th>
+                      <th scope="col">반</th>
+                      <th scope="col">번호</th>
+                      <th scope="col">성명</th>
+                      <th scope="col">비고</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentRosterCandidateResult.previewCandidates.map(
+                      (candidate) => (
+                        <tr key={candidate.sourceRowIndex}>
+                          <td>{candidate.grade}</td>
+                          <td>{candidate.className}</td>
+                          <td>{candidate.number}</td>
+                          <td>{candidate.name}</td>
+                          <td>{candidate.note || "-"}</td>
+                        </tr>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="excel-import-empty">
+                표시할 학생 후보 데이터가 없습니다.
               </p>
             )}
           </div>
