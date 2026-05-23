@@ -14,8 +14,8 @@ export interface ExcelImportSourceAdapter {
   selectSource(): Promise<ExcelImportSourceResult>;
 }
 
-// This adapter only accepts source metadata. Browser File ownership must stay in
-// a browser boundary before real workbook parsing is implemented.
+// This metadata-only adapter is not enough for real workbook parsing. Browser
+// FileReader work must stay in BrowserExcelParserBoundary or a sibling boundary.
 export interface ExcelWorkbookParserAdapter {
   parseSource(source: ExcelImportSourceMeta): Promise<ExcelWorkbookParseResult>;
 }

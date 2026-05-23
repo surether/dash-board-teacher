@@ -11,6 +11,15 @@ Phase 3-A introduced a stubbed Excel import surface without real file handling.
 
 No actual workbook selection, binary parsing, row import, or storage apply path exists yet.
 
+Completed Phase 3 source/parser boundary work:
+
+- `ExcelImportSourcePicker` owns the file input boundary.
+- Selected files produce source metadata only: file name, size, MIME type, selection time, and last modified time.
+- `ExcelImportSettings` displays metadata but does not know about `File`, `FileList`, `FileReader`, `xlsx`, or parser execution.
+- `BrowserExcelParserBoundary` exists as a blocked skeleton for future browser-only parsing.
+- `noopBrowserExcelParserBoundary` returns an `ExcelWorkbookParseResult` with `status: "blocked"` and `workbook: null`.
+- The parser boundary contract is type-checked, but no parser implementation is connected.
+
 ## 2. Problems To Solve
 
 The current stub is useful for UI validation, but it does not yet define strong boundaries for the real import flow.
@@ -76,6 +85,15 @@ Not allowed in Phase 3-B:
 - `xlsx` dependency
 - workbook parsing implementation
 - parser calls from UI components
+
+Phase 3-J parser introduction rule:
+
+- File reading and workbook parsing must stay separate phases.
+- `FileReader` may only be introduced inside a browser import/parser boundary, never in `ExcelImportSettings`.
+- `xlsx` must not be introduced in the same step as the first `FileReader` boundary unless a later phase explicitly allows that combined risk.
+- `ExcelWorkbookParserAdapter.parseSource(source: ExcelImportSourceMeta)` is metadata-only and is not sufficient for real file parsing by itself.
+- `BrowserExcelParserBoundary` is the future owner of browser-only `File`/`FileReader` access and should emit `ExcelWorkbookParseResult`, not preview rows or import plans.
+- Parser output must not be stored directly and must not create `StudentRosterImportPlan` directly.
 
 ### Mapping
 
@@ -160,6 +178,33 @@ Phase 3-B rule:
 | Import plan | dry-run apply summary | direct persistence |
 | Apply | future storage write | parsing, UI rendering |
 
+## 5.1 Future Phase Order
+
+The remaining Excel import work should open one responsibility at a time:
+
+1. Source metadata
+2. FileReader boundary
+3. ArrayBuffer acquisition
+4. `xlsx` workbook parsing
+5. Raw sheet rows extraction
+6. Preview rows generation
+7. Validation
+8. `StudentRosterImportPlan` dry-run
+9. Explicit import apply
+10. Storage persistence
+
+Do not collapse these phases into a single implementation. In particular, file reading, workbook parsing, preview generation, import-plan creation, and storage writes must be independently reviewable.
+
+## 5.2 Responsibility Boundaries
+
+- `ExcelImportSourcePicker`: owns file selection and shallow metadata creation.
+- `BrowserExcelParserBoundary`: owns browser-only `File`/`FileReader` access when that phase opens.
+- `ExcelWorkbookParserAdapter`: owns workbook/raw sheet parsing behind a replaceable parser adapter.
+- Preview/mapper layer: owns preview row creation and validation-facing row shape.
+- Import plan layer: owns `StudentRosterImportPlan` dry-run generation after validation.
+- Storage layer: owns persistence only after an explicit apply action.
+- `ExcelImportSettings`: owns display and user controls only; it must not own File APIs, parser execution, import plans, or storage writes.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
@@ -169,6 +214,10 @@ These direct connections should stay forbidden even after real file parsing begi
 - UI -> `FileReader`
 - UI -> `xlsx`
 - `ExcelImportSettings` -> `<input type="file">`
+- `ExcelImportSettings` -> parser boundary execution
+- source result -> parser result mixed state
+- parser result -> storage direct save
+- parser result -> `StudentRosterImportPlan` without preview and validation
 - validation -> `saveStudentRosterState`
 - validation -> timetable storage
 - import plan -> storage direct save
@@ -244,3 +293,20 @@ The following remain forbidden until a later phase explicitly allows them:
 - applying teacher timetable imports
 - applying class timetable imports
 - putting parser logic inside `ExcelImportSettings`
+
+## 11. Next Phase Candidates
+
+The next phase should still avoid real `xlsx` workbook parsing. Reasonable next steps are:
+
+- Phase 3-J-C: design or skeleton the `FileReader` boundary without reading file contents yet.
+- Phase 3-J-D: review `xlsx` package impact, including bundle size, security posture, file format coverage, and typing gaps.
+- Phase 3-J-E: design the parser adapter input contract, such as whether it receives `ArrayBuffer`, normalized workbook-like data, or another browser-boundary output.
+
+Still forbidden in these next candidates unless explicitly opened:
+
+- installing `xlsx`
+- importing `XLSX`
+- parsing workbooks or worksheets
+- generating preview rows from a real file
+- creating `StudentRosterImportPlan`
+- applying imported data to storage
