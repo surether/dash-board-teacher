@@ -1,6 +1,10 @@
 import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ExcelImportSourcePicker } from "../import/ExcelImportSourcePicker";
+import {
+  createUnsupportedExcelParsedPreviewResult,
+  type ExcelParsedPreviewResult,
+} from "../import/excelParserBoundary";
 import type {
   ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
@@ -66,6 +70,16 @@ const FILE_READ_STATUS_LABELS: Record<FileReadSummaryStatus, string> = {
   cancelled: "선택 취소",
 };
 
+const PARSED_PREVIEW_STATUS_LABELS: Record<
+  ExcelParsedPreviewResult["status"],
+  string
+> = {
+  idle: "대기",
+  ready: "준비됨",
+  error: "오류",
+  unsupported: "미지원",
+};
+
 function formatFileSize(size: number | undefined) {
   if (typeof size !== "number") {
     return "크기 미확인";
@@ -114,6 +128,8 @@ export function ExcelImportSettings() {
     useState<ExcelImportSourceResult | null>(null);
   const [fileReadSummary, setFileReadSummary] =
     useState<FileReadSummary | null>(null);
+  const [parsedPreviewSummary, setParsedPreviewSummary] =
+    useState<ExcelParsedPreviewResult | null>(null);
   const [notice, setNotice] = useState(
     "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
   );
@@ -149,6 +165,7 @@ export function ExcelImportSettings() {
     setSourceStatus("idle");
     setSourceResult(null);
     setFileReadSummary(null);
+    setParsedPreviewSummary(null);
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
@@ -156,11 +173,17 @@ export function ExcelImportSettings() {
     setSourceStatus("requested");
     setSourceResult(null);
     setFileReadSummary(null);
+    setParsedPreviewSummary(null);
     setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
   }
 
   function handleFileReadSummary(summary: FileReadSummary) {
     setFileReadSummary(summary);
+    setParsedPreviewSummary(
+      summary.status === "ready" && summary.hasBuffer
+        ? createUnsupportedExcelParsedPreviewResult(summary.source)
+        : null,
+    );
   }
 
   function handleSourceResult(result: ExcelImportSourceResult) {
@@ -186,6 +209,7 @@ export function ExcelImportSettings() {
       ],
     });
     setFileReadSummary(null);
+    setParsedPreviewSummary(null);
     setNotice(message);
   }
 
@@ -194,6 +218,7 @@ export function ExcelImportSettings() {
     setSourceStatus("idle");
     setSourceResult(null);
     setFileReadSummary(null);
+    setParsedPreviewSummary(null);
     setNotice("현재 대상의 샘플 매핑과 검증 결과를 초기화했습니다.");
   }
 
@@ -318,6 +343,43 @@ export function ExcelImportSettings() {
             ) : (
               <p>파일 읽기 경계에서 보고된 이슈가 없습니다.</p>
             )}
+          </div>
+        </section>
+      ) : null}
+
+      {parsedPreviewSummary ? (
+        <section className="excel-import-source" aria-label="파싱 미지원 요약">
+          <div className="excel-import-source__header">
+            <div>
+              <h4>파싱 미지원 요약</h4>
+              <p>
+                파일 읽기는 완료되었지만 실제 파싱과 미리보기 생성은 아직
+                지원하지 않습니다.
+              </p>
+            </div>
+            <span data-status="blocked">
+              {PARSED_PREVIEW_STATUS_LABELS[parsedPreviewSummary.status]}
+            </span>
+          </div>
+          <div className="excel-import-source__body">
+            <div>
+              <strong>
+                {parsedPreviewSummary.source?.fileName ?? "선택된 파일 없음"}
+              </strong>
+              <small>
+                행 수{" "}
+                {parsedPreviewSummary.rowCount ?? "미지원"} · 열 수{" "}
+                {parsedPreviewSummary.columnCount ?? "미지원"} · 이슈{" "}
+                {parsedPreviewSummary.issues.length}개
+              </small>
+            </div>
+            <ul className="excel-source-issue-list">
+              {parsedPreviewSummary.issues.map((issue) => (
+                <li key={issue.message} data-level={issue.level}>
+                  {issue.message}
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       ) : null}
