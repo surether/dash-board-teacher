@@ -15,8 +15,10 @@ const parserBoundaryBlockedResult = {
   issues: [parserBoundaryBlockedIssue],
 } satisfies ExcelWorkbookParseResult;
 
-// Future FileReader ownership belongs here or in a sibling browser boundary.
-// This boundary must return parser results only, not preview rows or import plans.
+// Phase 3-J-C keeps this as a FileReader boundary skeleton only.
+// A future implementation may own browser-only binary acquisition here, but
+// this boundary must stay blocked until a phase explicitly opens file reading.
+// It must return parser results only, not preview rows, import plans, or writes.
 export interface BrowserExcelParserBoundary {
   parseSelectedSource(): Promise<ExcelWorkbookParseResult>;
 }

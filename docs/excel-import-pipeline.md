@@ -205,6 +205,37 @@ Do not collapse these phases into a single implementation. In particular, file r
 - Storage layer: owns persistence only after an explicit apply action.
 - `ExcelImportSettings`: owns display and user controls only; it must not own File APIs, parser execution, import plans, or storage writes.
 
+## 5.3 Phase 3-J-C FileReader Boundary Skeleton
+
+Phase 3-J-C defines the FileReader boundary without implementing file reading.
+
+Allowed in this phase:
+
+- Document the future browser-only file reading boundary.
+- Keep `BrowserExcelParserBoundary` blocked by default.
+- Clarify that the boundary may later acquire an `ArrayBuffer` before parser work begins.
+- Keep parser result, source result, preview rows, import plans, and storage writes separate.
+
+Still forbidden in this phase:
+
+- Creating a `FileReader` instance.
+- Calling any `readAs...` method.
+- Installing or importing `xlsx`.
+- Parsing workbooks or worksheets.
+- Generating preview rows from a selected file.
+- Creating `StudentRosterImportPlan`.
+- Calling storage adapters from Excel import code.
+- Moving parser execution into `ExcelImportSettings`.
+- Adding parser responsibility to `ExcelImportSourcePicker`.
+
+The intended future flow is:
+
+1. `ExcelImportSourcePicker` keeps file selection and metadata responsibility.
+2. A browser parser boundary owns the selected browser file handle internally.
+3. A later FileReader phase may convert that handle into an `ArrayBuffer`.
+4. A still later parser phase may convert the binary payload into workbook/raw sheet data.
+5. Preview, validation, import plan, and apply remain downstream phases.
+
 ## 6. Forbidden Direct Connections
 
 These direct connections should stay forbidden even after real file parsing begins:
@@ -298,7 +329,6 @@ The following remain forbidden until a later phase explicitly allows them:
 
 The next phase should still avoid real `xlsx` workbook parsing. Reasonable next steps are:
 
-- Phase 3-J-C: design or skeleton the `FileReader` boundary without reading file contents yet.
 - Phase 3-J-D: review `xlsx` package impact, including bundle size, security posture, file format coverage, and typing gaps.
 - Phase 3-J-E: design the parser adapter input contract, such as whether it receives `ArrayBuffer`, normalized workbook-like data, or another browser-boundary output.
 
