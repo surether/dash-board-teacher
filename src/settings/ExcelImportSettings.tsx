@@ -64,10 +64,10 @@ const SOURCE_STATUS_LABELS: Record<SourceBoundaryStatus, string> = {
 };
 
 const SOURCE_STATUS_MESSAGES: Record<SourceBoundaryStatus, string> = {
-  idle: "source adapter 요청 전입니다. 실제 파일 선택 입력은 아직 연결하지 않았습니다.",
+  idle: "파일 선택 전입니다. 학생명렬표 양식은 CSV로 저장해 가져오세요.",
   requested: "source adapter 경계를 확인하는 중입니다.",
   ready: "파일 메타데이터를 받았습니다. CSV 파일이면 미리보기를 생성합니다.",
-  blocked: "현재 단계에서는 noop adapter가 실제 파일 선택을 차단합니다.",
+  blocked: "현재 .xlsx 직접 가져오기는 지원하지 않습니다. 학생명렬표 양식을 CSV로 저장해 가져오세요.",
   error: "source adapter 요청 중 오류가 발생했습니다.",
 };
 
@@ -142,7 +142,7 @@ export function ExcelImportSettings() {
     useState<StudentRosterApplySummary | null>(null);
   const [isSavingStudentRoster, setIsSavingStudentRoster] = useState(false);
   const [notice, setNotice] = useState(
-    "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
+    "학생명렬 CSV는 학년, 반, 번호, 성명, 비고 헤더를 기준으로 인식합니다. 현재 .xlsx 직접 가져오기는 지원하지 않습니다.",
   );
 
   const schema = useMemo(() => getImportSchema(draft.target), [draft.target]);
@@ -196,7 +196,11 @@ export function ExcelImportSettings() {
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
     setIsSavingStudentRoster(false);
-    setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
+    setNotice(
+      target === "studentRoster"
+        ? "학생명렬 CSV는 학년, 반, 번호, 성명, 비고 헤더를 기준으로 인식합니다."
+        : `${getImportSchema(target).title} 샘플 스키마를 불러왔습니다. 실제 적용은 아직 지원하지 않습니다.`,
+    );
   }
 
   function handleSourceRequest() {
@@ -206,7 +210,7 @@ export function ExcelImportSettings() {
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
     setIsSavingStudentRoster(false);
-    setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
+    setNotice("파일 선택 경계를 확인하는 중입니다.");
   }
 
   function handleFileReadSummary(summary: FileReadSummary) {
@@ -228,7 +232,7 @@ export function ExcelImportSettings() {
     setNotice(
       result.status === "ready"
         ? "파일 메타데이터를 받았습니다. CSV 파일이면 아래에서 앞부분 미리보기를 확인할 수 있습니다."
-        : "source picker가 noop adapter의 blocked 결과를 전달했습니다. 실제 파일 선택은 아직 연결하지 않습니다.",
+        : "현재 .xlsx 직접 가져오기는 지원하지 않습니다. 학생명렬표 양식을 CSV로 저장해 가져오세요.",
     );
   }
 
@@ -286,7 +290,7 @@ export function ExcelImportSettings() {
         appliedAt,
       });
       setNotice(
-        `학생명렬에 ${appliedCount}명을 적용하고 저장했습니다. 오류 행 ${excludedIssueRowCount}개는 제외했습니다.`,
+        `학생명렬에 ${appliedCount}명을 적용하고 저장했습니다. 오류 행 ${excludedIssueRowCount}개는 제외했습니다. 새로고침 후에도 유지되며 뽑기/사다리/룰렛에서 사용됩니다.`,
       );
     } catch (error) {
       const message =
@@ -303,8 +307,8 @@ export function ExcelImportSettings() {
         <div>
           <h3>엑셀 가져오기</h3>
           <p>
-            학생 명렬표와 시간표 import를 위한 컬럼 매핑, 미리보기, 검증
-            결과 UI입니다.
+            학생명렬 CSV를 가져와 미리보고 저장합니다. 교사 시간표와 학급
+            시간표는 아직 준비 화면입니다.
           </p>
         </div>
         <span>{DRAFT_STATUS_LABELS[draft.status]}</span>
@@ -351,8 +355,8 @@ export function ExcelImportSettings() {
           <div>
             <h4>파일 선택 경계</h4>
             <p>
-              나중에 source adapter가 파일 메타데이터를 넘겨줄 위치입니다.
-              현재는 선택한 파일의 메타데이터와 CSV 미리보기 경계를 표시합니다.
+              선택한 파일의 메타데이터와 CSV 미리보기 경계를 표시합니다.
+              현재 .xlsx 직접 가져오기는 지원하지 않습니다.
             </p>
           </div>
           <span data-status={sourceStatus}>
@@ -429,8 +433,8 @@ export function ExcelImportSettings() {
             <div>
               <h4>CSV 미리보기</h4>
               <p>
-                CSV 파일의 앞부분만 표로 표시합니다. 학생명렬 저장과 매핑은
-                아직 실행하지 않습니다.
+                CSV 파일의 앞부분만 표로 표시합니다. 학생명렬 저장은 아래
+                학생 후보 미리보기에서 정상 행만 대상으로 실행합니다.
               </p>
             </div>
             <span
@@ -511,7 +515,7 @@ export function ExcelImportSettings() {
               <p>
                 학년, 반, 번호, 성명, 비고 헤더를 기준으로 학생 후보만
                 해석합니다. 적용 버튼은 기존 학생명렬 저장 구조에 정상
-                학생만 저장합니다.
+                학생만 저장하고 오류 행은 제외합니다.
               </p>
             </div>
             <span
@@ -559,7 +563,8 @@ export function ExcelImportSettings() {
             >
               <p>
                 적용 시 현재 저장된 학생명렬이 선택한 CSV의 정상 학생 목록으로
-                교체됩니다. 오류 행은 제외되며 병합하지 않습니다.
+                교체됩니다. 오류 행은 제외되며 병합하지 않습니다. 저장 후
+                새로고침해도 유지되고 뽑기/사다리/룰렛에서 사용됩니다.
               </p>
               <button
                 type="button"
@@ -576,7 +581,8 @@ export function ExcelImportSettings() {
                 학생명렬에 {studentRosterApplySummary.appliedCount}명을
                 적용하고 저장했습니다. 오류 행{" "}
                 {studentRosterApplySummary.excludedIssueRowCount}개는
-                제외했습니다.
+                제외했습니다. 새로고침 후에도 유지되고 학생 기반 위젯에서
+                사용됩니다.
               </p>
             ) : null}
             {studentRosterCandidateResult.previewCandidates.length > 0 ? (

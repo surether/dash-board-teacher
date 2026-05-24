@@ -922,7 +922,8 @@ export function LessonToolsWidget() {
     if (!selectedClass) {
       return (
         <div className="lesson-tool-empty">
-          전체 설정에서 학교와 반을 먼저 추가하세요.
+          저장된 학생명렬이 없습니다. 전체 설정에서 학생명렬 CSV를 가져오면
+          이 위젯에서 학생 목록을 사용할 수 있습니다.
         </div>
       );
     }
@@ -930,8 +931,8 @@ export function LessonToolsWidget() {
     if (classStudents.length === 0) {
       return (
         <div className="lesson-tool-empty">
-          학생을 먼저 추가하세요. 학생 명렬표 위젯에서 선택 반 학생을 등록하면
-          수업도구가 바로 연결됩니다.
+          선택한 반에 저장된 학생이 없습니다. 학생명렬을 저장하거나
+          학생명렬 위젯에서 학생을 추가하면 수업도구가 바로 연결됩니다.
         </div>
       );
     }
@@ -1449,7 +1450,8 @@ export function LessonToolsWidget() {
         <div className="lesson-tools-summary">
           <strong>{selectedClass.displayName}</strong>
           <span>
-            {selectedSchool?.name ?? "학교 미지정"} · {classStudents.length}명
+            {selectedSchool?.name ?? "학교 미지정"} · 저장 학생명렬{" "}
+            {classStudents.length}명 불러옴
           </span>
         </div>
       ) : null}

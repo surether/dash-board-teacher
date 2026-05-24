@@ -667,7 +667,7 @@ export function StudentRosterWidget() {
             {visibleStudents.length === 0 ? (
               <li className="student-list__empty">
                 {classStudents.length === 0
-                  ? "아직 등록된 학생이 없습니다."
+                  ? "저장된 학생명렬이 없습니다. 전체 설정에서 학생명렬 CSV를 가져오거나 학생을 직접 추가하세요."
                   : "검색 결과가 없습니다."}
               </li>
             ) : null}
@@ -675,7 +675,8 @@ export function StudentRosterWidget() {
         </>
       ) : (
         <div className="student-roster-empty">
-          전체 설정에서 학교와 반을 먼저 추가하세요.
+          저장된 학생명렬이 없습니다. 전체 설정에서 학생명렬 CSV를 가져오면
+          이 위젯에 학생 목록이 표시됩니다.
         </div>
       )}
     </div>
