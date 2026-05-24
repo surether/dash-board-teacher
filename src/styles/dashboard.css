@@ -298,7 +298,8 @@ button {
 .lesson-tools-widget,
 .quick-links-widget,
 .timetable-widget,
-.academic-calendar-widget {
+.academic-calendar-widget,
+.weather-readiness-widget {
   height: 100%;
 }
 
@@ -607,6 +608,114 @@ button {
   color: var(--apple-text-muted);
   font-size: 0.75rem;
   line-height: 1.45;
+}
+
+.weather-readiness-widget {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.weather-readiness-widget__notice {
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--widget-accent) 24%, var(--apple-border));
+  border-radius: 16px;
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--apple-text);
+  background: color-mix(in srgb, var(--widget-accent) 9%, var(--apple-surface-muted));
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.weather-readiness-widget__section {
+  display: grid;
+  gap: 8px;
+}
+
+.weather-readiness-widget__section h3 {
+  margin: 0;
+  color: var(--apple-text);
+  font-size: 0.84rem;
+  font-weight: 760;
+}
+
+.weather-hint-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weather-hint-card {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+  padding: 10px 11px;
+  background: var(--apple-surface-muted);
+}
+
+.weather-hint-card strong {
+  color: var(--apple-text);
+  font-size: 0.8rem;
+  font-weight: 760;
+}
+
+.weather-hint-card span {
+  color: var(--apple-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.38;
+}
+
+.readiness-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.readiness-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 9px;
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+  padding: 9px 11px;
+  background: var(--apple-surface-muted);
+}
+
+.readiness-item::before {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 7px;
+  background: var(--widget-accent);
+  content: "";
+}
+
+.readiness-item span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.readiness-item strong {
+  overflow: hidden;
+  color: var(--apple-text);
+  font-size: 0.8rem;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.readiness-item small {
+  color: var(--apple-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.38;
 }
 
 .memo-widget {
@@ -2595,6 +2704,10 @@ button {
   }
 
   .quick-links-widget__groups {
+    grid-template-columns: 1fr;
+  }
+
+  .weather-hint-grid {
     grid-template-columns: 1fr;
   }
 

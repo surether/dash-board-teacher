@@ -10,6 +10,7 @@ import { StickyNotesWidget } from "../widgets/StickyNotesWidget";
 import { StudentRosterWidget } from "../widgets/StudentRosterWidget";
 import { TaskWidget } from "../widgets/TaskWidget";
 import { TimetableWidget } from "../widgets/TimetableWidget";
+import { WeatherReadinessWidget } from "../widgets/WeatherReadinessWidget";
 
 const lgLayouts: Layout[] = [
   { i: "clock", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
@@ -30,6 +31,7 @@ const lgLayouts: Layout[] = [
   { i: "sticky-notes", x: 6, y: 15, w: 6, h: 6, minW: 3, minH: 5 },
   { i: "timetable", x: 0, y: 21, w: 12, h: 6, minW: 6, minH: 5 },
   { i: "academic-calendar", x: 0, y: 27, w: 6, h: 5, minW: 3, minH: 4 },
+  { i: "weather-readiness", x: 6, y: 27, w: 6, h: 5, minW: 3, minH: 4 },
 ];
 
 export const defaultLayouts: Layouts = {
@@ -45,6 +47,7 @@ export const defaultLayouts: Layouts = {
     { i: "sticky-notes", x: 0, y: 34, w: 10, h: 6, minW: 4, minH: 5 },
     { i: "timetable", x: 0, y: 40, w: 10, h: 6, minW: 4, minH: 5 },
     { i: "academic-calendar", x: 0, y: 46, w: 10, h: 5, minW: 4, minH: 4 },
+    { i: "weather-readiness", x: 0, y: 51, w: 10, h: 5, minW: 4, minH: 4 },
   ],
   sm: [
     { i: "clock", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
@@ -57,6 +60,7 @@ export const defaultLayouts: Layouts = {
     { i: "sticky-notes", x: 0, y: 34, w: 6, h: 6, minW: 3, minH: 5 },
     { i: "timetable", x: 0, y: 40, w: 6, h: 6, minW: 3, minH: 5 },
     { i: "academic-calendar", x: 0, y: 46, w: 6, h: 5, minW: 3, minH: 4 },
+    { i: "weather-readiness", x: 0, y: 51, w: 6, h: 5, minW: 3, minH: 4 },
   ],
   xs: [
     { i: "clock", x: 0, y: 0, w: 4, h: 5, minW: 4, minH: 4 },
@@ -69,6 +73,7 @@ export const defaultLayouts: Layouts = {
     { i: "sticky-notes", x: 0, y: 46, w: 4, h: 6, minW: 4, minH: 5 },
     { i: "timetable", x: 0, y: 52, w: 4, h: 6, minW: 4, minH: 5 },
     { i: "academic-calendar", x: 0, y: 58, w: 4, h: 5, minW: 4, minH: 4 },
+    { i: "weather-readiness", x: 0, y: 63, w: 4, h: 5, minW: 4, minH: 4 },
   ],
   xxs: [
     { i: "clock", x: 0, y: 0, w: 2, h: 5, minW: 2, minH: 4 },
@@ -81,6 +86,7 @@ export const defaultLayouts: Layouts = {
     { i: "sticky-notes", x: 0, y: 46, w: 2, h: 6, minW: 2, minH: 5 },
     { i: "timetable", x: 0, y: 52, w: 2, h: 6, minW: 2, minH: 5 },
     { i: "academic-calendar", x: 0, y: 58, w: 2, h: 5, minW: 2, minH: 4 },
+    { i: "weather-readiness", x: 0, y: 63, w: 2, h: 5, minW: 2, minH: 4 },
   ],
 };
 
@@ -164,5 +170,13 @@ export const primaryWidgets: WidgetDefinition[] = [
     component: AcademicCalendarWidget,
     accent: "purple",
     defaultLayout: lgLayouts[9],
+  },
+  {
+    id: "weather-readiness",
+    title: "날씨 · 등교 준비",
+    subtitle: "실시간 연동 없는 확인 안내",
+    component: WeatherReadinessWidget,
+    accent: "blue",
+    defaultLayout: lgLayouts[10],
   },
 ];

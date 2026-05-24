@@ -15,7 +15,8 @@ export type DashboardWidgetType =
   | "neis-api"
   | "excel-upload"
   | "student-roster"
-  | "academic-calendar";
+  | "academic-calendar"
+  | "weather-readiness";
 
 export type WidgetId = DashboardWidgetType;
 
