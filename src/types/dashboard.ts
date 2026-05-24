@@ -9,6 +9,7 @@ export type DashboardWidgetType =
   | "tasks"
   | "custom-alerts"
   | "quick-links"
+  | "timetable"
   | "sticky-notes"
   | "lesson-tools"
   | "neis-api"
