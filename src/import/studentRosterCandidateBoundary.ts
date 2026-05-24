@@ -12,9 +12,6 @@ const NOTE_HEADER = "비고";
 const STUDENT_CANDIDATE_PREVIEW_LIMIT = 20;
 const SESSION_IMPORT_SCHOOL_ID = "session-import-school";
 
-export const STUDENT_ROSTER_SESSION_APPLIED_EVENT =
-  "teacher-widget-dashboard:student-roster-session-applied";
-
 export type StudentRosterCandidate = {
   grade: string;
   className: string;
@@ -42,13 +39,6 @@ export type StudentRosterCandidateResult = {
   previewCandidates: StudentRosterCandidate[];
   issues: StudentRosterCandidateIssue[];
   summary: StudentRosterCandidateSummary;
-};
-
-export type StudentRosterSessionAppliedDetail = {
-  state: StudentRosterState;
-  appliedCount: number;
-  excludedIssueRowCount: number;
-  appliedAt: string;
 };
 
 export function createStudentRosterCandidateResult(

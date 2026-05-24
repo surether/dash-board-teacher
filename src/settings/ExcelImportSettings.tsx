@@ -5,9 +5,8 @@ import type { CsvParserBoundaryResult } from "../import/csvParserBoundary";
 import {
   createStudentRosterCandidateResult,
   createStudentRosterSessionStateFromCandidates,
-  STUDENT_ROSTER_SESSION_APPLIED_EVENT,
-  type StudentRosterSessionAppliedDetail,
 } from "../import/studentRosterCandidateBoundary";
+import { widgetStorage } from "../storage/widgetStorage";
 import type {
   ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
@@ -141,6 +140,7 @@ export function ExcelImportSettings() {
     useState<CsvParserBoundaryResult | null>(null);
   const [studentRosterApplySummary, setStudentRosterApplySummary] =
     useState<StudentRosterApplySummary | null>(null);
+  const [isSavingStudentRoster, setIsSavingStudentRoster] = useState(false);
   const [notice, setNotice] = useState(
     "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
   );
@@ -195,6 +195,7 @@ export function ExcelImportSettings() {
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
+    setIsSavingStudentRoster(false);
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
@@ -204,6 +205,7 @@ export function ExcelImportSettings() {
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
+    setIsSavingStudentRoster(false);
     setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
   }
 
@@ -211,11 +213,13 @@ export function ExcelImportSettings() {
     setFileReadSummary(summary);
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
+    setIsSavingStudentRoster(false);
   }
 
   function handleCsvPreviewResult(result: CsvParserBoundaryResult) {
     setParsedPreviewSummary(result);
     setStudentRosterApplySummary(null);
+    setIsSavingStudentRoster(false);
   }
 
   function handleSourceResult(result: ExcelImportSourceResult) {
@@ -243,6 +247,7 @@ export function ExcelImportSettings() {
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
+    setIsSavingStudentRoster(false);
     setNotice(message);
   }
 
@@ -253,10 +258,11 @@ export function ExcelImportSettings() {
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
     setStudentRosterApplySummary(null);
+    setIsSavingStudentRoster(false);
     setNotice("현재 대상의 샘플 매핑과 검증 결과를 초기화했습니다.");
   }
 
-  function applyStudentRosterCandidatesToSession() {
+  async function applyStudentRosterCandidatesToStorage() {
     if (!studentRosterCandidateResult || !canApplyStudentRoster) {
       return;
     }
@@ -266,30 +272,29 @@ export function ExcelImportSettings() {
       studentRosterCandidateResult.candidates,
       appliedAt,
     );
-    const detail: StudentRosterSessionAppliedDetail = {
-      state,
-      appliedCount: studentRosterCandidateResult.candidates.length,
-      excludedIssueRowCount: studentRosterCandidateResult.summary.issueRowCount,
-      appliedAt,
-    };
+    const appliedCount = studentRosterCandidateResult.candidates.length;
+    const excludedIssueRowCount =
+      studentRosterCandidateResult.summary.issueRowCount;
 
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent<StudentRosterSessionAppliedDetail>(
-          STUDENT_ROSTER_SESSION_APPLIED_EVENT,
-          { detail },
-        ),
+    setIsSavingStudentRoster(true);
+
+    try {
+      await widgetStorage.saveStudentRosterState(state);
+      setStudentRosterApplySummary({
+        appliedCount,
+        excludedIssueRowCount,
+        appliedAt,
+      });
+      setNotice(
+        `학생명렬에 ${appliedCount}명을 적용하고 저장했습니다. 오류 행 ${excludedIssueRowCount}개는 제외했습니다.`,
       );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "알 수 없는 오류";
+      setNotice(`학생명렬 저장 중 오류가 발생했습니다: ${message}`);
+    } finally {
+      setIsSavingStudentRoster(false);
     }
-
-    setStudentRosterApplySummary({
-      appliedCount: detail.appliedCount,
-      excludedIssueRowCount: detail.excludedIssueRowCount,
-      appliedAt,
-    });
-    setNotice(
-      `정상 학생 ${detail.appliedCount}명을 현재 세션 학생명렬에 적용했습니다. 영구 저장은 아직 하지 않습니다.`,
-    );
   }
 
   return (
@@ -505,8 +510,8 @@ export function ExcelImportSettings() {
               <h4>학생 후보 미리보기</h4>
               <p>
                 학년, 반, 번호, 성명, 비고 헤더를 기준으로 학생 후보만
-                해석합니다. 적용 버튼은 현재 세션 화면에만 반영하며 영구
-                저장하지 않습니다.
+                해석합니다. 적용 버튼은 기존 학생명렬 저장 구조에 정상
+                학생만 저장합니다.
               </p>
             </div>
             <span
@@ -553,23 +558,25 @@ export function ExcelImportSettings() {
               aria-label="학생 후보 적용"
             >
               <p>
-                적용 시 현재 세션의 학생명렬이 선택한 CSV의 정상 학생 목록으로
-                교체됩니다. 오류 행은 제외되며 아직 영구 저장되지 않습니다.
+                적용 시 현재 저장된 학생명렬이 선택한 CSV의 정상 학생 목록으로
+                교체됩니다. 오류 행은 제외되며 병합하지 않습니다.
               </p>
               <button
                 type="button"
-                disabled={!canApplyStudentRoster}
-                onClick={applyStudentRosterCandidatesToSession}
+                disabled={!canApplyStudentRoster || isSavingStudentRoster}
+                onClick={applyStudentRosterCandidatesToStorage}
               >
-                정상 학생 {studentRosterApplyCount}명 적용
+                {isSavingStudentRoster
+                  ? "학생명렬 저장 중"
+                  : `정상 학생 ${studentRosterApplyCount}명 적용하고 저장`}
               </button>
             </div>
             {studentRosterApplySummary ? (
               <p className="excel-import-settings__notice" aria-live="polite">
                 학생명렬에 {studentRosterApplySummary.appliedCount}명을
-                적용했습니다. 오류 행{" "}
+                적용하고 저장했습니다. 오류 행{" "}
                 {studentRosterApplySummary.excludedIssueRowCount}개는
-                제외했습니다. 영구 저장되지는 않았습니다.
+                제외했습니다.
               </p>
             ) : null}
             {studentRosterCandidateResult.previewCandidates.length > 0 ? (
