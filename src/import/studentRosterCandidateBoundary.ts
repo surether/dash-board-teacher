@@ -166,12 +166,28 @@ export function createStudentRosterSessionStateFromCandidates(
     });
   });
 
+  const sortedClasses = [...classes].sort(compareClasses);
+  const classOrder = new Map(
+    sortedClasses.map((classInfo, index) => [classInfo.id, index]),
+  );
+  const sortedStudents = [...students].sort((a, b) =>
+    compareStudents(a, b, classOrder),
+  );
+  const studentOrder = new Map(
+    sortedStudents.map((student, index) => [student.id, index]),
+  );
+  const sortedAttendanceRecords = [...attendanceRecords].sort(
+    (a, b) =>
+      (studentOrder.get(a.studentId) ?? Number.MAX_SAFE_INTEGER) -
+      (studentOrder.get(b.studentId) ?? Number.MAX_SAFE_INTEGER),
+  );
+
   return {
-    selectedClassId: classes[0]?.id ?? null,
+    selectedClassId: sortedClasses[0]?.id ?? null,
     schools: [school],
-    classes,
-    students,
-    attendanceRecords,
+    classes: sortedClasses,
+    students: sortedStudents,
+    attendanceRecords: sortedAttendanceRecords,
     counselingRecords: [],
     studentStatusMemos: [],
   };
@@ -250,6 +266,51 @@ function getMissingRequiredFields(candidate: StudentRosterCandidate) {
   }
 
   return missingFields;
+}
+
+function compareClasses(a: ClassInfo, b: ClassInfo) {
+  const gradeCompare = compareRosterNumbers(a.grade, b.grade);
+
+  if (gradeCompare !== 0) {
+    return gradeCompare;
+  }
+
+  const classCompare = compareRosterNumbers(a.classNumber, b.classNumber);
+
+  if (classCompare !== 0) {
+    return classCompare;
+  }
+
+  return a.displayName.localeCompare(b.displayName, "ko-KR");
+}
+
+function compareStudents(
+  a: StudentInfo,
+  b: StudentInfo,
+  classOrder: Map<string, number>,
+) {
+  const classCompare =
+    (classOrder.get(a.classId) ?? Number.MAX_SAFE_INTEGER) -
+    (classOrder.get(b.classId) ?? Number.MAX_SAFE_INTEGER);
+
+  if (classCompare !== 0) {
+    return classCompare;
+  }
+
+  const numberCompare = compareRosterNumbers(a.number, b.number);
+
+  if (numberCompare !== 0) {
+    return numberCompare;
+  }
+
+  return a.name.localeCompare(b.name, "ko-KR");
+}
+
+function compareRosterNumbers(a: number, b: number) {
+  const aValue = a > 0 ? a : Number.MAX_SAFE_INTEGER;
+  const bValue = b > 0 ? b : Number.MAX_SAFE_INTEGER;
+
+  return aValue - bValue;
 }
 
 function parseRosterNumber(value: string) {
