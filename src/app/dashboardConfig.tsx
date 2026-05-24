@@ -1,5 +1,6 @@
 import type { Layout, Layouts } from "react-grid-layout";
 import type { WidgetDefinition } from "../types/dashboard";
+import { AcademicCalendarWidget } from "../widgets/AcademicCalendarWidget";
 import { ClockWidget } from "../widgets/ClockWidget";
 import { CustomAlertWidget } from "../widgets/CustomAlertWidget";
 import { LessonToolsWidget } from "../widgets/LessonToolsWidget";
@@ -28,6 +29,7 @@ const lgLayouts: Layout[] = [
   { i: "quick-links", x: 0, y: 16, w: 6, h: 5, minW: 3, minH: 4 },
   { i: "sticky-notes", x: 6, y: 15, w: 6, h: 6, minW: 3, minH: 5 },
   { i: "timetable", x: 0, y: 21, w: 12, h: 6, minW: 6, minH: 5 },
+  { i: "academic-calendar", x: 0, y: 27, w: 6, h: 5, minW: 3, minH: 4 },
 ];
 
 export const defaultLayouts: Layouts = {
@@ -42,6 +44,7 @@ export const defaultLayouts: Layouts = {
     { i: "quick-links", x: 0, y: 29, w: 10, h: 5, minW: 4, minH: 4 },
     { i: "sticky-notes", x: 0, y: 34, w: 10, h: 6, minW: 4, minH: 5 },
     { i: "timetable", x: 0, y: 40, w: 10, h: 6, minW: 4, minH: 5 },
+    { i: "academic-calendar", x: 0, y: 46, w: 10, h: 5, minW: 4, minH: 4 },
   ],
   sm: [
     { i: "clock", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
@@ -53,6 +56,7 @@ export const defaultLayouts: Layouts = {
     { i: "quick-links", x: 0, y: 29, w: 6, h: 5, minW: 3, minH: 4 },
     { i: "sticky-notes", x: 0, y: 34, w: 6, h: 6, minW: 3, minH: 5 },
     { i: "timetable", x: 0, y: 40, w: 6, h: 6, minW: 3, minH: 5 },
+    { i: "academic-calendar", x: 0, y: 46, w: 6, h: 5, minW: 3, minH: 4 },
   ],
   xs: [
     { i: "clock", x: 0, y: 0, w: 4, h: 5, minW: 4, minH: 4 },
@@ -64,6 +68,7 @@ export const defaultLayouts: Layouts = {
     { i: "quick-links", x: 0, y: 41, w: 4, h: 5, minW: 4, minH: 4 },
     { i: "sticky-notes", x: 0, y: 46, w: 4, h: 6, minW: 4, minH: 5 },
     { i: "timetable", x: 0, y: 52, w: 4, h: 6, minW: 4, minH: 5 },
+    { i: "academic-calendar", x: 0, y: 58, w: 4, h: 5, minW: 4, minH: 4 },
   ],
   xxs: [
     { i: "clock", x: 0, y: 0, w: 2, h: 5, minW: 2, minH: 4 },
@@ -75,6 +80,7 @@ export const defaultLayouts: Layouts = {
     { i: "quick-links", x: 0, y: 41, w: 2, h: 5, minW: 2, minH: 4 },
     { i: "sticky-notes", x: 0, y: 46, w: 2, h: 6, minW: 2, minH: 5 },
     { i: "timetable", x: 0, y: 52, w: 2, h: 6, minW: 2, minH: 5 },
+    { i: "academic-calendar", x: 0, y: 58, w: 2, h: 5, minW: 2, minH: 4 },
   ],
 };
 
@@ -150,5 +156,13 @@ export const primaryWidgets: WidgetDefinition[] = [
     component: TimetableWidget,
     accent: "orange",
     defaultLayout: lgLayouts[8],
+  },
+  {
+    id: "academic-calendar",
+    title: "학사일정",
+    subtitle: "다가오는 예시 일정",
+    component: AcademicCalendarWidget,
+    accent: "purple",
+    defaultLayout: lgLayouts[9],
   },
 ];

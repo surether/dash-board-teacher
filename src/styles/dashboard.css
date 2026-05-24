@@ -297,7 +297,8 @@ button {
 .student-roster-widget,
 .lesson-tools-widget,
 .quick-links-widget,
-.timetable-widget {
+.timetable-widget,
+.academic-calendar-widget {
   height: 100%;
 }
 
@@ -506,6 +507,102 @@ button {
 }
 
 .timetable-widget__note {
+  flex: 0 0 auto;
+  color: var(--apple-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.academic-calendar-widget {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.academic-calendar-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.academic-calendar-widget__header strong {
+  color: var(--apple-text);
+  font-size: 0.88rem;
+  font-weight: 760;
+}
+
+.academic-calendar-widget__header span {
+  flex: 0 0 auto;
+  border-radius: var(--apple-radius-control);
+  padding: 5px 8px;
+  color: var(--apple-text-muted);
+  background: var(--apple-surface-strong);
+  font-size: 0.7rem;
+  font-weight: 720;
+}
+
+.academic-event-list {
+  display: grid;
+  min-height: 0;
+  gap: 8px;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.academic-event-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+  padding: 10px 11px;
+  background: var(--apple-surface-muted);
+}
+
+.academic-event-card time {
+  color: var(--widget-accent);
+  font-size: 0.86rem;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.academic-event-card span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.academic-event-card strong {
+  overflow: hidden;
+  color: var(--apple-text);
+  font-size: 0.84rem;
+  font-weight: 730;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.academic-event-card small {
+  color: var(--apple-text-muted);
+  font-size: 0.72rem;
+}
+
+.academic-event-card em {
+  border-radius: var(--apple-radius-control);
+  padding: 5px 8px;
+  color: var(--apple-text);
+  background: color-mix(in srgb, var(--widget-accent) 14%, transparent);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.academic-calendar-widget__note {
   flex: 0 0 auto;
   color: var(--apple-text-muted);
   font-size: 0.75rem;

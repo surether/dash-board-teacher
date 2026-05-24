@@ -13,7 +13,6 @@ import {
   WIDGET_STORAGE_KEYS,
 } from "../storage/widgetStorage";
 import type { ThemeMode, WidgetLayoutState } from "../types/dashboard";
-import { AcademicCalendarStub } from "../widgets/stubs/AcademicCalendarStub";
 import { ExcelUploadStub } from "../widgets/stubs/ExcelUploadStub";
 import { NeisApiStub } from "../widgets/stubs/NeisApiStub";
 import { defaultLayouts, primaryWidgets } from "./dashboardConfig";
@@ -193,12 +192,11 @@ export function DashboardApp() {
 
       <CollapsePanel
         title="추가 예정 위젯"
-        summary="NEIS API, 엑셀 업로드, 학사일정은 아직 Stub 상태입니다."
+        summary="NEIS API와 엑셀 업로드는 아직 Stub 상태입니다."
       >
         <div className="stub-grid">
           <NeisApiStub />
           <ExcelUploadStub />
-          <AcademicCalendarStub />
         </div>
       </CollapsePanel>
     </main>
