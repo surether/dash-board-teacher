@@ -4,6 +4,7 @@ import { ClockWidget } from "../widgets/ClockWidget";
 import { CustomAlertWidget } from "../widgets/CustomAlertWidget";
 import { LessonToolsWidget } from "../widgets/LessonToolsWidget";
 import { MemoWidget } from "../widgets/MemoWidget";
+import { QuickLinksWidget } from "../widgets/QuickLinksWidget";
 import { StickyNotesWidget } from "../widgets/StickyNotesWidget";
 import { StudentRosterWidget } from "../widgets/StudentRosterWidget";
 import { TaskWidget } from "../widgets/TaskWidget";
@@ -23,6 +24,7 @@ const lgLayouts: Layout[] = [
     minH: 8,
   },
   { i: "lesson-tools", x: 6, y: 7, w: 6, h: 8, minW: 4, minH: 7 },
+  { i: "quick-links", x: 0, y: 16, w: 6, h: 5, minW: 3, minH: 4 },
   { i: "sticky-notes", x: 6, y: 15, w: 6, h: 6, minW: 3, minH: 5 },
 ];
 
@@ -35,7 +37,8 @@ export const defaultLayouts: Layouts = {
     { i: "custom-alerts", x: 5, y: 5, w: 5, h: 7, minW: 3, minH: 6 },
     { i: "student-roster", x: 0, y: 12, w: 10, h: 9, minW: 4, minH: 8 },
     { i: "lesson-tools", x: 0, y: 21, w: 10, h: 8, minW: 4, minH: 7 },
-    { i: "sticky-notes", x: 0, y: 29, w: 10, h: 6, minW: 4, minH: 5 },
+    { i: "quick-links", x: 0, y: 29, w: 10, h: 5, minW: 4, minH: 4 },
+    { i: "sticky-notes", x: 0, y: 34, w: 10, h: 6, minW: 4, minH: 5 },
   ],
   sm: [
     { i: "clock", x: 0, y: 0, w: 3, h: 5, minW: 2, minH: 4 },
@@ -44,7 +47,8 @@ export const defaultLayouts: Layouts = {
     { i: "custom-alerts", x: 3, y: 5, w: 3, h: 7, minW: 2, minH: 6 },
     { i: "student-roster", x: 0, y: 12, w: 6, h: 9, minW: 3, minH: 8 },
     { i: "lesson-tools", x: 0, y: 21, w: 6, h: 8, minW: 3, minH: 7 },
-    { i: "sticky-notes", x: 0, y: 29, w: 6, h: 6, minW: 3, minH: 5 },
+    { i: "quick-links", x: 0, y: 29, w: 6, h: 5, minW: 3, minH: 4 },
+    { i: "sticky-notes", x: 0, y: 34, w: 6, h: 6, minW: 3, minH: 5 },
   ],
   xs: [
     { i: "clock", x: 0, y: 0, w: 4, h: 5, minW: 4, minH: 4 },
@@ -53,7 +57,8 @@ export const defaultLayouts: Layouts = {
     { i: "custom-alerts", x: 0, y: 17, w: 4, h: 7, minW: 4, minH: 6 },
     { i: "student-roster", x: 0, y: 24, w: 4, h: 9, minW: 4, minH: 8 },
     { i: "lesson-tools", x: 0, y: 33, w: 4, h: 8, minW: 4, minH: 7 },
-    { i: "sticky-notes", x: 0, y: 41, w: 4, h: 6, minW: 4, minH: 5 },
+    { i: "quick-links", x: 0, y: 41, w: 4, h: 5, minW: 4, minH: 4 },
+    { i: "sticky-notes", x: 0, y: 46, w: 4, h: 6, minW: 4, minH: 5 },
   ],
   xxs: [
     { i: "clock", x: 0, y: 0, w: 2, h: 5, minW: 2, minH: 4 },
@@ -62,7 +67,8 @@ export const defaultLayouts: Layouts = {
     { i: "custom-alerts", x: 0, y: 17, w: 2, h: 7, minW: 2, minH: 6 },
     { i: "student-roster", x: 0, y: 24, w: 2, h: 9, minW: 2, minH: 8 },
     { i: "lesson-tools", x: 0, y: 33, w: 2, h: 8, minW: 2, minH: 7 },
-    { i: "sticky-notes", x: 0, y: 41, w: 2, h: 6, minW: 2, minH: 5 },
+    { i: "quick-links", x: 0, y: 41, w: 2, h: 5, minW: 2, minH: 4 },
+    { i: "sticky-notes", x: 0, y: 46, w: 2, h: 6, minW: 2, minH: 5 },
   ],
 };
 
@@ -116,11 +122,19 @@ export const primaryWidgets: WidgetDefinition[] = [
     defaultLayout: lgLayouts[5],
   },
   {
+    id: "quick-links",
+    title: "바로가기",
+    subtitle: "교육 사이트와 중요 링크",
+    component: QuickLinksWidget,
+    accent: "green",
+    defaultLayout: lgLayouts[6],
+  },
+  {
     id: "sticky-notes",
     title: "포스트잇",
     subtitle: "짧은 메모 카드",
     component: StickyNotesWidget,
     accent: "purple",
-    defaultLayout: lgLayouts[6],
+    defaultLayout: lgLayouts[7],
   },
 ];

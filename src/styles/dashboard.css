@@ -295,7 +295,8 @@ button {
 .custom-alert-widget,
 .sticky-notes-widget,
 .student-roster-widget,
-.lesson-tools-widget {
+.lesson-tools-widget,
+.quick-links-widget {
   height: 100%;
 }
 
@@ -333,6 +334,101 @@ button {
   height: 8px;
   border-radius: 50%;
   background: var(--apple-accent-green);
+}
+
+.quick-links-widget {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.quick-links-widget__intro {
+  flex: 0 0 auto;
+}
+
+.quick-links-widget__groups {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.quick-links-widget__section {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-links-widget__section h3 {
+  margin: 0;
+  color: var(--apple-text);
+  font-size: 0.84rem;
+  font-weight: 760;
+}
+
+.quick-links-widget__list {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-link-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--apple-border);
+  border-radius: 16px;
+  padding: 10px 11px;
+  color: var(--apple-text);
+  background: var(--apple-surface-muted);
+  text-decoration: none;
+  transition:
+    transform var(--apple-transition),
+    border-color var(--apple-transition),
+    background var(--apple-transition);
+}
+
+.quick-link-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--widget-accent) 34%, var(--apple-border));
+  background: color-mix(in srgb, var(--widget-accent) 9%, var(--apple-surface-muted));
+}
+
+.quick-link-card:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--widget-accent) 58%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--widget-accent) 14%, transparent);
+}
+
+.quick-link-card span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.quick-link-card strong {
+  overflow: hidden;
+  font-size: 0.86rem;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-link-card small {
+  overflow: hidden;
+  color: var(--apple-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-link-card svg {
+  color: var(--widget-accent);
 }
 
 .memo-widget {
@@ -2318,6 +2414,10 @@ button {
 
   .stub-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quick-links-widget__groups {
+    grid-template-columns: 1fr;
   }
 
   .school-settings__grid,

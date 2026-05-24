@@ -8,6 +8,7 @@ export type DashboardWidgetType =
   | "memo"
   | "tasks"
   | "custom-alerts"
+  | "quick-links"
   | "sticky-notes"
   | "lesson-tools"
   | "neis-api"
