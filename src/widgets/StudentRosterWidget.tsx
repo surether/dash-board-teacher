@@ -1,5 +1,9 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { ChevronDown, MessageSquare, Plus, Trash2 } from "lucide-react";
+import {
+  STUDENT_ROSTER_SESSION_APPLIED_EVENT,
+  type StudentRosterSessionAppliedDetail,
+} from "../import/studentRosterCandidateBoundary";
 import { STUDENT_ROSTER_UPDATED_EVENT } from "../storage/dashboardStorage";
 import { widgetStorage } from "../storage/widgetStorage";
 import type {
@@ -143,13 +147,28 @@ export function StudentRosterWidget() {
       setStatusText("저장됨");
     }
 
+    function handleRosterSessionApplied(event: Event) {
+      const customEvent = event as CustomEvent<StudentRosterSessionAppliedDetail>;
+      setRosterState(customEvent.detail.state);
+      setStatusText("세션 적용됨");
+      setExpandedStudentIds([]);
+    }
+
     window.addEventListener(STUDENT_ROSTER_UPDATED_EVENT, handleRosterUpdated);
+    window.addEventListener(
+      STUDENT_ROSTER_SESSION_APPLIED_EVENT,
+      handleRosterSessionApplied,
+    );
 
     return () => {
       isMounted = false;
       window.removeEventListener(
         STUDENT_ROSTER_UPDATED_EVENT,
         handleRosterUpdated,
+      );
+      window.removeEventListener(
+        STUDENT_ROSTER_SESSION_APPLIED_EVENT,
+        handleRosterSessionApplied,
       );
     };
   }, []);

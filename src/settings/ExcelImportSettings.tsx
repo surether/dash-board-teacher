@@ -2,7 +2,12 @@ import { RotateCcw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ExcelImportSourcePicker } from "../import/ExcelImportSourcePicker";
 import type { CsvParserBoundaryResult } from "../import/csvParserBoundary";
-import { createStudentRosterCandidateResult } from "../import/studentRosterCandidateBoundary";
+import {
+  createStudentRosterCandidateResult,
+  createStudentRosterSessionStateFromCandidates,
+  STUDENT_ROSTER_SESSION_APPLIED_EVENT,
+  type StudentRosterSessionAppliedDetail,
+} from "../import/studentRosterCandidateBoundary";
 import type {
   ExcelImportAdapterStatus,
   ExcelImportDraftStatus,
@@ -43,6 +48,12 @@ type FileReadSummary = {
   source: ExcelImportSourceResult["source"];
   hasBuffer: boolean;
   issues: ExcelImportValidationIssue[];
+};
+
+type StudentRosterApplySummary = {
+  appliedCount: number;
+  excludedIssueRowCount: number;
+  appliedAt: string;
 };
 
 const SOURCE_STATUS_LABELS: Record<SourceBoundaryStatus, string> = {
@@ -128,6 +139,8 @@ export function ExcelImportSettings() {
     useState<FileReadSummary | null>(null);
   const [parsedPreviewSummary, setParsedPreviewSummary] =
     useState<CsvParserBoundaryResult | null>(null);
+  const [studentRosterApplySummary, setStudentRosterApplySummary] =
+    useState<StudentRosterApplySummary | null>(null);
   const [notice, setNotice] = useState(
     "샘플 스키마만 표시합니다. 실제 파일 선택과 적용은 다음 단계에서 구현합니다.",
   );
@@ -170,6 +183,10 @@ export function ExcelImportSettings() {
     () => createStudentRosterCandidateResult(parsedPreviewSummary),
     [parsedPreviewSummary],
   );
+  const studentRosterApplyCount =
+    studentRosterCandidateResult?.candidates.length ?? 0;
+  const canApplyStudentRoster =
+    draft.target === "studentRoster" && studentRosterApplyCount > 0;
 
   function updateTarget(target: ExcelImportTarget) {
     setDraft(createEmptyImportDraft(target));
@@ -177,6 +194,7 @@ export function ExcelImportSettings() {
     setSourceResult(null);
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
+    setStudentRosterApplySummary(null);
     setNotice(`${getImportSchema(target).title} 샘플 스키마를 불러왔습니다.`);
   }
 
@@ -185,16 +203,19 @@ export function ExcelImportSettings() {
     setSourceResult(null);
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
+    setStudentRosterApplySummary(null);
     setNotice("파일 선택 source adapter 경계를 확인하는 중입니다.");
   }
 
   function handleFileReadSummary(summary: FileReadSummary) {
     setFileReadSummary(summary);
     setParsedPreviewSummary(null);
+    setStudentRosterApplySummary(null);
   }
 
   function handleCsvPreviewResult(result: CsvParserBoundaryResult) {
     setParsedPreviewSummary(result);
+    setStudentRosterApplySummary(null);
   }
 
   function handleSourceResult(result: ExcelImportSourceResult) {
@@ -221,6 +242,7 @@ export function ExcelImportSettings() {
     });
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
+    setStudentRosterApplySummary(null);
     setNotice(message);
   }
 
@@ -230,7 +252,44 @@ export function ExcelImportSettings() {
     setSourceResult(null);
     setFileReadSummary(null);
     setParsedPreviewSummary(null);
+    setStudentRosterApplySummary(null);
     setNotice("현재 대상의 샘플 매핑과 검증 결과를 초기화했습니다.");
+  }
+
+  function applyStudentRosterCandidatesToSession() {
+    if (!studentRosterCandidateResult || !canApplyStudentRoster) {
+      return;
+    }
+
+    const appliedAt = new Date().toISOString();
+    const state = createStudentRosterSessionStateFromCandidates(
+      studentRosterCandidateResult.candidates,
+      appliedAt,
+    );
+    const detail: StudentRosterSessionAppliedDetail = {
+      state,
+      appliedCount: studentRosterCandidateResult.candidates.length,
+      excludedIssueRowCount: studentRosterCandidateResult.summary.issueRowCount,
+      appliedAt,
+    };
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent<StudentRosterSessionAppliedDetail>(
+          STUDENT_ROSTER_SESSION_APPLIED_EVENT,
+          { detail },
+        ),
+      );
+    }
+
+    setStudentRosterApplySummary({
+      appliedCount: detail.appliedCount,
+      excludedIssueRowCount: detail.excludedIssueRowCount,
+      appliedAt,
+    });
+    setNotice(
+      `정상 학생 ${detail.appliedCount}명을 현재 세션 학생명렬에 적용했습니다. 영구 저장은 아직 하지 않습니다.`,
+    );
   }
 
   return (
@@ -446,7 +505,8 @@ export function ExcelImportSettings() {
               <h4>학생 후보 미리보기</h4>
               <p>
                 학년, 반, 번호, 성명, 비고 헤더를 기준으로 학생 후보만
-                해석합니다. 저장과 학생명렬 반영은 아직 실행하지 않습니다.
+                해석합니다. 적용 버튼은 현재 세션 화면에만 반영하며 영구
+                저장하지 않습니다.
               </p>
             </div>
             <span
@@ -487,6 +547,30 @@ export function ExcelImportSettings() {
                   </li>
                 ))}
               </ul>
+            ) : null}
+            <div
+              className="excel-import-settings__controls"
+              aria-label="학생 후보 적용"
+            >
+              <p>
+                적용 시 현재 세션의 학생명렬이 선택한 CSV의 정상 학생 목록으로
+                교체됩니다. 오류 행은 제외되며 아직 영구 저장되지 않습니다.
+              </p>
+              <button
+                type="button"
+                disabled={!canApplyStudentRoster}
+                onClick={applyStudentRosterCandidatesToSession}
+              >
+                정상 학생 {studentRosterApplyCount}명 적용
+              </button>
+            </div>
+            {studentRosterApplySummary ? (
+              <p className="excel-import-settings__notice" aria-live="polite">
+                학생명렬에 {studentRosterApplySummary.appliedCount}명을
+                적용했습니다. 오류 행{" "}
+                {studentRosterApplySummary.excludedIssueRowCount}개는
+                제외했습니다. 영구 저장되지는 않았습니다.
+              </p>
             ) : null}
             {studentRosterCandidateResult.previewCandidates.length > 0 ? (
               <div className="excel-preview-table-wrap">

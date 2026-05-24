@@ -1,8 +1,19 @@
 import type { CsvParserBoundaryResult } from "./csvParserBoundary";
+import type {
+  AttendanceRecord,
+  ClassInfo,
+  SchoolInfo,
+  StudentInfo,
+  StudentRosterState,
+} from "../types/dashboard";
 
 const REQUIRED_STUDENT_ROSTER_HEADERS = ["학년", "반", "번호", "성명"] as const;
 const NOTE_HEADER = "비고";
 const STUDENT_CANDIDATE_PREVIEW_LIMIT = 20;
+const SESSION_IMPORT_SCHOOL_ID = "session-import-school";
+
+export const STUDENT_ROSTER_SESSION_APPLIED_EVENT =
+  "teacher-widget-dashboard:student-roster-session-applied";
 
 export type StudentRosterCandidate = {
   grade: string;
@@ -31,6 +42,13 @@ export type StudentRosterCandidateResult = {
   previewCandidates: StudentRosterCandidate[];
   issues: StudentRosterCandidateIssue[];
   summary: StudentRosterCandidateSummary;
+};
+
+export type StudentRosterSessionAppliedDetail = {
+  state: StudentRosterState;
+  appliedCount: number;
+  excludedIssueRowCount: number;
+  appliedAt: string;
 };
 
 export function createStudentRosterCandidateResult(
@@ -102,6 +120,70 @@ export function createStudentRosterCandidateResult(
       recognizedStudentCount: candidates.length,
       issueRowCount: issues.length,
     },
+  };
+}
+
+export function createStudentRosterSessionStateFromCandidates(
+  candidates: StudentRosterCandidate[],
+  appliedAt = new Date().toISOString(),
+): StudentRosterState {
+  const school: SchoolInfo = {
+    id: SESSION_IMPORT_SCHOOL_ID,
+    name: "CSV 가져오기",
+  };
+  const classes: ClassInfo[] = [];
+  const classIdByKey = new Map<string, string>();
+  const students: StudentInfo[] = [];
+  const attendanceRecords: AttendanceRecord[] = [];
+  const attendanceDate = formatDateKey(appliedAt);
+
+  candidates.forEach((candidate, index) => {
+    const classKey = `${candidate.grade}::${candidate.className}`;
+    let classId = classIdByKey.get(classKey);
+
+    if (!classId) {
+      classId = `session-class-${classes.length + 1}-${createSlug(
+        candidate.grade,
+      )}-${createSlug(candidate.className)}`;
+      classIdByKey.set(classKey, classId);
+      classes.push({
+        id: classId,
+        schoolId: school.id,
+        grade: parseRosterNumber(candidate.grade),
+        classNumber: parseRosterNumber(candidate.className),
+        displayName: `${candidate.grade}학년 ${candidate.className}반`,
+      });
+    }
+
+    const studentId = `session-student-${index + 1}-${createSlug(
+      candidate.name,
+    )}`;
+    students.push({
+      id: studentId,
+      classId,
+      number: parseRosterNumber(candidate.number),
+      name: candidate.name,
+      createdAt: appliedAt,
+      updatedAt: appliedAt,
+    });
+    attendanceRecords.push({
+      id: `session-attendance-${index + 1}`,
+      studentId,
+      date: attendanceDate,
+      status: "unknown",
+      note: candidate.note || undefined,
+      updatedAt: appliedAt,
+    });
+  });
+
+  return {
+    selectedClassId: classes[0]?.id ?? null,
+    schools: [school],
+    classes,
+    students,
+    attendanceRecords,
+    counselingRecords: [],
+    studentStatusMemos: [],
   };
 }
 
@@ -178,4 +260,34 @@ function getMissingRequiredFields(candidate: StudentRosterCandidate) {
   }
 
   return missingFields;
+}
+
+function parseRosterNumber(value: string) {
+  const parsed = Number.parseInt(value.trim(), 10);
+
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function createSlug(value: string) {
+  const normalized = value
+    .trim()
+    .toLocaleLowerCase("ko-KR")
+    .replace(/[^0-9a-z가-힣]+/gi, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return normalized || "item";
+}
+
+function formatDateKey(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
